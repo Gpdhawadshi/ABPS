@@ -115,6 +115,7 @@ th{background:var(--bg)}
 <div class="g">
  <div><label for="aa">आधार क्रमांक</label><input id="aa" inputmode="numeric" placeholder="0000 0000 0000"><div class="err" id="e_aa"></div></div>
  <div><label for="an">आधारप्रमाणे नाव (English)</label><input id="an" autocapitalize="words"><div class="err" id="e_an"></div></div>
+ <div><label for="mb">मजुराचा मोबाईल नंबर (ऐच्छिक)</label><input id="mb" type="tel" inputmode="numeric" maxlength="10" placeholder="10 अंकी"><div class="err" id="e_mb"></div></div>
 </div>
 </fieldset>
 
@@ -222,6 +223,7 @@ $('same').addEventListener('change',()=>{ $('acn').readOnly=$('same').checked; i
 // आधार, IFSC, खाते
 $('aa').addEventListener('input',()=>{ const d=$('aa').value.replace(/\D/g,'').slice(0,12); $('aa').value=d.replace(/(\d{4})(?=\d)/g,'$1 '); });
 $('acc').addEventListener('input',()=>{ $('acc').value=$('acc').value.replace(/\D/g,'').slice(0,18); });
+$('mb').addEventListener('input',()=>{ $('mb').value=$('mb').value.replace(/\D/g,'').slice(0,10); });
 
 // बँक
 const banksOf = t => BK.filter(b=>b.t.toLowerCase()===t.toLowerCase()).map(b=>b.n);
@@ -245,13 +247,14 @@ function check(){
   if($('nm').value.trim().length<3) E.nm='नाव English मध्ये भरा';
   if(!/^[2-9]\d{11}$/.test($('aa').value.replace(/\s/g,''))) E.aa='आधार १२ अंकी असावा';
   if($('an').value.trim().length<3) E.an='आधारप्रमाणे नाव English मध्ये भरा';
+  if($('mb').value && !/^[6-9]\d{9}$/.test($('mb').value)) E.mb='मोबाईल नंबर १० अंकी असावा (६ ते ९ ने सुरू होणारा)';
   if(!$('bt').value) E.bt='बँकेचा प्रकार निवडा';
   const l=banksOf($('bt').value);
   if(l.length ? !l.includes($('bn').value) : $('bn').value.trim().length<3) E.bn='बँक यादीतून निवडा';
   if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test($('ifsc').value)) E.ifsc='IFSC चुकीचा (११ अक्षरे, ५ वे अक्षर 0)';
   if($('acc').value.length<9) E.acc='खाते क्रमांक किमान ९ अंकी';
   if($('acn').value.trim().length<3) E.acn='खात्यावरील नाव भरा';
-  const map={loc:'g',vl:'vl',jc:'jc',ap:'ap',nm:'nm',aa:'aa',an:'an',bt:'bt',bn:'bn',ifsc:'ifsc',acc:'acc',acn:'acn'};
+  const map={loc:'g',vl:'vl',mb:'mb',jc:'jc',ap:'ap',nm:'nm',aa:'aa',an:'an',bt:'bt',bn:'bn',ifsc:'ifsc',acc:'acc',acn:'acn'};
   Object.keys(map).forEach(k=>{ $('e_'+k).textContent=E[k]||''; $(map[k]).classList.toggle('bad',!!E[k]); });
   return !Object.keys(E).length;
 }
@@ -270,7 +273,7 @@ function lastLine(r,note,count){ if(count!==false) saved++; const el=$('last'); 
   el.textContent=`शेवटची नोंद: ${r.name} – Family ID ${r.family}, अर्जदार ${r.applicant}${note||''} • या सत्रात एकूण ${saved} नोंदी`; }
 
 // जुनी नोंद बदलण्याची पुष्टी
-const LBL={name:'नाव',aadhaar:'आधार क्रमांक',aadhaarName:'आधारप्रमाणे नाव',bank:'बँक',ifsc:'IFSC',account:'खाते क्रमांक',accountName:'खात्यावरील नाव'};
+const LBL={name:'नाव',aadhaar:'आधार क्रमांक',aadhaarName:'आधारप्रमाणे नाव',mobile:'मोबाईल नंबर',bank:'बँक',ifsc:'IFSC',account:'खाते क्रमांक',accountName:'खात्यावरील नाव'};
 function confirmReplace(old,changed,rec){ return new Promise(res=>{
   const tb=$('dtb'); tb.innerHTML='';
   $('dtxt').textContent=`${rec.name} – Family ID ${rec.family}, अर्जदार ${rec.applicant} (${rec.village}) ही नोंद आधीपासून आहे. खालील माहिती वेगळी आहे:`;
@@ -283,7 +286,7 @@ $('f').addEventListener('submit',async ev=>{
   ev.preventDefault();
   if(!check()){ show('जतन झाले नाही – लाल रंगातील चुका दुरुस्त करा','no'); const b=document.querySelector('.bad'); if(b) b.scrollIntoView({block:'center',behavior:'smooth'}); return; }
   const rec={jilha:$('j').value.trim(),taluka:$('t').value.trim(),gpE:$('g').value,gpM:$('gm').value,village:$('vl').value.trim(),
-    family:$('fm').value,applicant:$('ap').value,name:$('nm').value.trim(),aadhaar:$('aa').value.replace(/\s/g,''),aadhaarName:$('an').value.trim(),
+    family:$('fm').value,applicant:$('ap').value,name:$('nm').value.trim(),aadhaar:$('aa').value.replace(/\s/g,''),aadhaarName:$('an').value.trim(),mobile:$('mb').value,
     bank:$('bn').value.trim(),ifsc:$('ifsc').value,account:$('acc').value,accountName:$('acn').value.trim()};
   $('sb').disabled=true; $('sb').textContent='जतन होत आहे…';
   try{
@@ -307,7 +310,7 @@ $('f').addEventListener('submit',async ev=>{
 });
 function resetForm(){
   const keep=$('keep').checked;
-  ['ap','nm','aa','an','bn','ifsc','acc','acn','bt'].forEach(k=>$(k).value='');
+  ['ap','nm','aa','an','mb','bn','ifsc','acc','acn','bt'].forEach(k=>$(k).value='');
   if(!keep){ $('jc').value='MH-'; $('fm').value=''; }
   $('same').checked=true; $('acn').readOnly=true; refreshBanks(true);
   document.querySelectorAll('.err').forEach(e=>e.textContent=''); document.querySelectorAll('.bad').forEach(e=>e.classList.remove('bad'));
