@@ -594,8 +594,17 @@ $('xa').onclick=()=>dl('a'); $('xb').onclick=()=>dl('b');
 
 // ===== मजूर यादी (Workers शीट) – एकदा आणून साठवतो =====
 const WC=new Map();
-const toW = (r,j,t) => ({j,t,gpE:r[0],gpM:r[1],village:r[2],jobcard:r[3],applicant:r[4],nameM:r[5],nameE:r[6],mobile:r[7],done:!!r[8],
-  fam:(r[3].split('/')[1]||'').toLowerCase(), nm:(r[5]+' '+r[6]).toLowerCase()});
+// ---- शोधासाठी: मराठी नावाला इंग्रजी अक्षरांनी शोधता यावे म्हणून "व्यंजन-सांगाडा" (bhosale = भोसले = bsl) ----
+const ZW=/[\u200c\u200d]/g, isDev=x=>/[\u0900-\u097F]/.test(x);
+const DEVK={'क':'k','ख':'k','ग':'g','घ':'g','ङ':'n','च':'c','छ':'c','ज':'j','झ':'j','ञ':'n','ट':'t','ठ':'t','ड':'d','ढ':'d','ण':'n','त':'t','थ':'t','द':'d','ध':'d','न':'n','प':'p','फ':'p','ब':'b','भ':'b','म':'n','र':'r','ल':'l','ळ':'l','व':'v','श':'s','ष':'s','स':'s','ह':'h','ं':'n','ँ':'n'};
+const skDev = w => w.replace(ZW,'').replace(/ज्ञ/g,'ग').split('').map(c=>DEVK[c]||'').join('').replace(/(.)\1+/g,'$1');
+const skLat = w => w.toLowerCase().replace(/dny|gny|jny|gy/g,'g').replace(/ksh|x/g,'ks').replace(/chh|ch/g,'C').replace(/sh/g,'s')
+  .replace(/[kgjtdpb]h/g,m=>m[0]).replace(/c/g,'k').replace(/C/g,'c').replace(/w/g,'v').replace(/z/g,'j').replace(/f/g,'p').replace(/q/g,'k').replace(/m/g,'n')
+  .replace(/[aeiouy]/g,'').replace(/[^a-z]/g,'').replace(/(.)\1+/g,'$1');
+const skAny = w => isDev(w)?skDev(w):skLat(w);
+const toW = (r,j,t) => { const nm=(r[5]+' '+r[6]).toLowerCase().replace(ZW,''), words=nm.split(/\s+/).filter(Boolean);
+  return {j,t,gpE:r[0],gpM:r[1],village:r[2],jobcard:r[3],applicant:r[4],nameM:r[5],nameE:r[6],mobile:r[7],done:!!r[8],
+    fam:(r[3].split('/')[1]||'').toLowerCase(), nm, words, sk:words.map(skAny)}; };
 async function getWorkers(j,t,gE,force){
   const key=j+'|'+t+'|'+gE, c=WC.get(key);
   if(c && !force && Date.now()-c.t<600000) return c.rows;
@@ -603,18 +612,23 @@ async function getWorkers(j,t,gE,force){
   if(!x.ok) throw new Error(x.error||'त्रुटी');
   const rows=x.rows.map(r=>toW(r,j,t)); WC.set(key,{t:Date.now(),rows}); return rows;
 }
-// नाव / जॉबकार्डमधील / नंतरचा क्रमांक यावरून शोध (टाइप करताच)
+// नाव (मराठी/English, स्पेलिंग थोडे वेगळे असले तरी) किंवा जॉबकार्डमधील / नंतरचा क्रमांक यावरून शोध (टाइप करताच)
 function searchW(list,qRaw,village){
-  const q=qRaw.trim().toLowerCase().replace(/^\//,''), v=village.trim().toLowerCase(), out=[];
-  if(!q) return null;
+  const q=qRaw.replace(ZW,'').trim().toLowerCase().replace(/^\//,''), v=village.trim().toLowerCase(), out=[];
+  const tok=q.split(/\s+/).filter(Boolean);
+  if(!tok.length) return null;
+  const tsk=tok.map(skAny);
   const vOk=v && list.some(w=>w.village.toLowerCase()===v);
   list.forEach(w=>{
     if(vOk && w.village.toLowerCase()!==v) return;
     let rk=-1;
-    if(w.fam===q) rk=0; else if(w.fam && w.fam.startsWith(q)) rk=1;
-    else if(w.nm.split(/\s+/).some(x=>x.startsWith(q))) rk=2;
-    else if(q.length>=2 && w.nm.includes(q)) rk=3;
-    else if(q.length>=3 && w.jobcard.toLowerCase().includes(q)) rk=4;
+    if(tok.length===1){
+      if(w.fam===q) rk=0; else if(w.fam && w.fam.startsWith(q)) rk=1;
+      else if(w.words.some(x=>x.startsWith(q))) rk=2;
+      else if(q.length>=2 && w.nm.includes(q)) rk=3;
+      else if(q.length>=3 && w.jobcard.toLowerCase().includes(q)) rk=4;
+      else if(tsk[0].length>=2 && w.sk.some(x=>x.startsWith(tsk[0]))) rk=5;
+    } else if(tok.every((t,i)=>w.words.some(x=>x.startsWith(t)) || (tsk[i].length>=2 && w.sk.some(x=>x.startsWith(tsk[i]))))) rk=2;
     if(rk>=0) out.push([rk,w]);
   });
   out.sort((a,b)=>a[0]-b[0]||a[1].village.localeCompare(b[1].village,'mr')||a[1].nameM.localeCompare(b[1].nameM,'mr'));
