@@ -13,29 +13,35 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#f3f1e8;--card:#fffdf7;--tx:#1e2b20;--mu:#5d6a5f;--bd:#c9d1c3;--er:#b3261e;--on:#fff;
- --c1:#1d6b3b;--c2:#1b5fa8;--c3:#b85c00;--ac:var(--c1)}
+ --c1:#1d6b3b;--c2:#1b5fa8;--c3:#b85c00;--c4:#7a3fb0;--ac:var(--c1)}
 @media (prefers-color-scheme:dark){:root{--bg:#111812;--card:#1a241c;--tx:#e9efe9;--mu:#9aab9d;--bd:#33443a;--er:#ff8a80;--on:#0a1a10;
- --c1:#62c487;--c2:#73b4f4;--c3:#f0a050}}
+ --c1:#62c487;--c2:#73b4f4;--c3:#f0a050;--c4:#c9a0f2}}
 body[data-tab="2"]{--ac:var(--c2)}
+body[data-tab="3"]{--ac:var(--c4)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Noto Sans Devanagari","Mukta",system-ui,sans-serif;padding-bottom:90px}
 header{background:var(--ac);color:var(--on);padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;gap:12px;align-items:center;transition:background .2s}
 header img{width:44px;height:44px;border-radius:10px}
 header h1{margin:0;font-size:1.4rem;letter-spacing:.06em;line-height:1.1}
-header p{margin:2px 0 0;font-size:.82rem;opacity:.92}
+header p{margin:2px 0 0;font-size:.8rem;opacity:.92}
+header .t{flex:1}
+#who{text-align:right;font-size:.8rem;line-height:1.3}
+#who button{margin-top:3px;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:3px 10px;font:inherit;cursor:pointer}
 main{max-width:720px;margin:0 auto;padding:12px}
-nav{display:flex;gap:8px;margin-bottom:12px}
-nav button{flex:1;padding:11px 6px;border:2px solid;background:var(--card);border-radius:10px;font:inherit;font-weight:700;cursor:pointer}
+nav{display:flex;gap:6px;margin-bottom:12px}
+nav button{flex:1;padding:10px 4px;border:2px solid;background:var(--card);border-radius:10px;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer}
 #n1{color:var(--c1);border-color:var(--c1)}
 #n2{color:var(--c2);border-color:var(--c2)}
+#n3{color:var(--c4);border-color:var(--c4)}
 #n1.on{background:var(--c1);color:var(--on)}
 #n2.on{background:var(--c2);color:var(--on)}
+#n3.on{background:var(--c4);color:var(--on)}
 fieldset{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin:0 0 12px;padding:12px 14px}
 legend{font-weight:700;padding:0 6px}
 .g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .g .w{grid-column:1/-1}
 @media(max-width:560px){.g{grid-template-columns:1fr}}
-.jr{display:grid;grid-template-columns:1fr auto 38%;gap:6px;align-items:start}
+.jr{display:grid;grid-template-columns:1fr auto 40%;gap:6px;align-items:start}
 .jr b{padding-top:30px;font-size:1.3rem}
 label{display:block;font-size:.88rem;color:var(--mu);margin-bottom:2px}
 input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
@@ -47,9 +53,10 @@ input[readonly]{opacity:.8}
 .row{display:flex;gap:8px;align-items:center;margin-top:4px}
 .row input{width:auto}
 .btn{width:100%;padding:13px;border:0;border-radius:10px;background:var(--ac);color:var(--on);font:inherit;font-weight:700;cursor:pointer}
-.btn.b3{background:var(--c3);margin-top:8px}
+.btn.b3{background:var(--c3);color:#fff;margin-top:8px}
+.btn.sm{width:auto;padding:8px 14px}
 .btn:disabled{opacity:.6}
-#toast{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:696px;margin:0 auto;padding:14px 16px;border-radius:10px;font-weight:700;display:none;z-index:9;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:696px;margin:0 auto;padding:14px 16px;border-radius:10px;font-weight:700;display:none;z-index:99;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 #toast.ok{display:block;background:#1d6b3b;color:#fff}
 #toast.no{display:block;background:#b3261e;color:#fff}
 #last{margin-top:10px;padding:8px 10px;border-left:4px solid var(--ac);background:var(--card);font-size:.9rem;display:none}
@@ -71,21 +78,51 @@ th{background:var(--bg)}
 #inst b{display:block;font-size:1rem}
 #inst button{border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer;background:#fff;color:#7a3b00}
 #inst .x{background:transparent;color:#fff;padding:6px 8px;font-size:1.2rem}
+#pl{display:none}
+body.guest #pl{display:block}
+body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #inst,body.guest #who{display:none!important}
+#eb{display:none;margin-bottom:12px;padding:10px 12px;border-radius:10px;background:var(--c4);color:var(--on);gap:10px;align-items:center}
+#eb.show{display:flex}
+#eb div{flex:1;font-size:.92rem}
+#eb button{border:0;border-radius:8px;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}
+.card{border:1px solid var(--bd);border-left:5px solid var(--c4);border-radius:10px;background:var(--card);padding:10px 12px;margin-bottom:10px}
+.card b{font-size:1rem}
+.card small{display:block;color:var(--mu)}
+.card .btn{margin-top:8px}
 .hide{display:none}
 </style>
 </head>
-<body data-tab="1">
-<header><img src="icon-192.png" alt="ABPS" onerror="this.style.display='none'"><div><h1>ABPS</h1><p>VB-G RAM G – मजूर आधार व बँक नोंदणी</p></div></header>
+<body data-tab="1" class="guest">
+<header><img src="icon-192.png" alt="ABPS" onerror="this.style.display='none'">
+ <div class="t"><h1>ABPS</h1><p>VB-G RAM G – मजूर आधार व बँक नोंदणी</p></div>
+ <div id="who"><div id="wn"></div><button id="lo" type="button">बाहेर पडा</button></div>
+</header>
 <main>
+<section id="pl">
+ <form id="lf" autocomplete="off">
+ <fieldset><legend>लॉगिन</legend>
+  <div class="g">
+   <div><label for="lu">वापरकर्ता नाव (Username)</label><input id="lu" autocapitalize="none" autocomplete="username"></div>
+   <div><label for="lp">PIN</label><input id="lp" type="password" autocomplete="current-password"></div>
+  </div>
+  <div class="row"><input type="checkbox" id="lr" checked><label for="lr" style="margin:0">या फोनवर लक्षात ठेवा</label></div>
+  <div class="err" id="lerr"></div>
+  <button class="btn" id="lb1" type="submit" style="margin-top:8px">लॉगिन</button>
+  <p class="hint">नाव व PIN admin कडून मिळवा. तुम्ही केलेल्या नोंदी फक्त तुम्ही व admin दुरुस्त करू शकता.</p>
+ </fieldset>
+ </form>
+</section>
+
 <div id="inst" role="region" aria-label="ॲप इन्स्टॉल">
  <img src="icon-192.png" alt="" onerror="this.style.display='none'">
  <div><b>ABPS ॲप फोनवर इन्स्टॉल करा</b><span id="instTxt">इन्स्टॉल केल्यावर ॲप Home screen वर आयकॉनसह उघडेल.</span></div>
  <button id="instBtn" type="button">इन्स्टॉल करा</button>
  <button class="x" id="instX" type="button" aria-label="बंद करा">✕</button>
 </div>
-<nav><button id="n1" class="on">नोंदणी</button><button id="n2">Excel डाउनलोड</button></nav>
+<nav><button id="n1" class="on">नोंदणी</button><button id="n2">Excel</button><button id="n3">नोंदी / दुरुस्ती</button></nav>
 
 <section id="p1">
+<div id="eb"><div id="ebt"></div><button id="ebx" type="button">रद्द</button></div>
 <form id="f" autocomplete="off" novalidate>
 <fieldset><legend>ठिकाण</legend>
 <div class="g">
@@ -101,9 +138,9 @@ th{background:var(--bg)}
 <div class="jr">
  <div><label for="jc">जॉबकार्ड क्रमांक</label><input id="jc" inputmode="numeric" value="MH-" placeholder="MH-11-001-002-001"></div>
  <b>/</b>
- <div><label for="fm">/ नंतरचा क्रमांक (Family ID)</label><input id="fm" inputmode="numeric" maxlength="6" placeholder="1"></div>
+ <div><label for="fm">/ नंतरचा भाग (Family ID)</label><input id="fm" maxlength="10" autocapitalize="characters" placeholder="12 किंवा 12-A"></div>
 </div>
-<div class="hint">फक्त अंक टाइप करा – MH व डॅश आपोआप येतील. ११ अंकांनंतर कर्सर पुढच्या बॉक्समध्ये जाईल.</div>
+<div class="hint">MH व डॅश आपोआप येतील. / नंतर १० पर्यंत अंक/अक्षरे चालतील (उदा. 1234567890 किंवा 125-A).</div>
 <div class="err" id="e_jc"></div>
 <div class="g" style="margin-top:6px">
  <div><label for="ap">जॉबकार्डमधील अर्जदार क्रमांक</label><input id="ap" inputmode="numeric" maxlength="3"><div class="err" id="e_ap"></div></div>
@@ -130,7 +167,7 @@ th{background:var(--bg)}
 </div>
 </fieldset>
 
-<div class="row" style="margin:0 0 10px"><input type="checkbox" id="keep"><label for="keep" style="margin:0">पुढचा अर्जदार – हेच जॉबकार्ड तसेच ठेवा</label></div>
+<div class="row" style="margin:0 0 10px" id="keepw"><input type="checkbox" id="keep"><label for="keep" style="margin:0">पुढचा अर्जदार – हेच जॉबकार्ड तसेच ठेवा</label></div>
 <button class="btn" id="sb" type="submit">जतन करा</button>
 <div id="last"></div>
 <p class="hint" id="qi"></p>
@@ -138,7 +175,7 @@ th{background:var(--bg)}
 </section>
 
 <section id="p2" class="hide">
-<fieldset><legend>Excel फाइल</legend>
+<fieldset><legend>Excel फाइल (फक्त Admin)</legend>
 <div class="g">
  <div><label for="xj">जिल्हा</label><input id="xj" list="dj"></div>
  <div><label for="xt">तालुका</label><input id="xt" list="dxt"></div>
@@ -150,6 +187,18 @@ th{background:var(--bg)}
 <button class="btn b3" id="xb" type="button">Account (Bank) फाइल डाउनलोड करा</button>
 <div id="xm" class="hint"></div>
 </fieldset>
+</section>
+
+<section id="p3" class="hide">
+<fieldset><legend id="p3t">नोंदी / दुरुस्ती</legend>
+<div class="g">
+ <div><label for="lq">शोधा (नाव, आधार, Family ID, गाव…)</label><input id="lq"></div>
+ <div id="lbw"><label for="lb">नोंद करणारा</label><select id="lb"><option value="">सर्व</option></select></div>
+</div>
+<button class="btn" id="ls" type="button" style="margin-top:8px">शोधा</button>
+<div id="lm" class="hint"></div>
+</fieldset>
+<div id="ll"></div>
 </section>
 </main>
 
@@ -170,7 +219,7 @@ th{background:var(--bg)}
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIhK2Df25uc_OkOFXGwQrz4M7HjJq4Z5w-qpYlgwGubgePJNleDQYcPqHcRMarlBfj7g/exec';
 // ===============================================
 const $ = id => document.getElementById(id);
-let GP = [], BK = [], saved = 0;
+let GP = [], BK = [], saved = 0, ME = null, EDIT = null;
 const uniq = a => [...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,'mr'));
 const fill = (dl, items) => { dl.innerHTML=''; items.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;if(l)o.label=l;dl.appendChild(o);}); };
 const ls = (k,v) => { try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } };
@@ -179,8 +228,35 @@ let tt;
 function show(t,c){ const el=$('toast'); el.textContent=t; el.className=c; clearTimeout(tt); if(c==='ok') tt=setTimeout(()=>el.className='',6000); }
 $('toast').onclick=()=>$('toast').className='';
 
+// ===== सर्व्हरशी संवाद (प्रत्येक विनंतीत लॉगिन) =====
+async function post(obj){
+  const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...obj,u:ME&&ME.u,p:ME&&ME.p})});
+  const x = await r.json();
+  if(x.error==='auth'||x.error==='locked'){ logout(true); throw new Error('auth'); }
+  return x;
+}
+
+// ===== लॉगिन =====
+function showLogin(t){ document.body.classList.add('guest'); $('lerr').textContent=t||''; }
+function logout(forced){ localStorage.removeItem('me'); ME=null; EDIT=null; showLogin(forced?'लॉगिन अवैध झाले – पुन्हा लॉगिन करा':''); }
+$('lo').onclick=()=>logout(false);
+function setWho(){ $('wn').textContent=ME.name+(ME.role==='admin'?' (Admin)':''); $('n2').style.display=ME.role==='admin'?'':'none'; $('lbw').style.display=ME.role==='admin'?'':'none';
+  $('p3t').textContent=ME.role==='admin'?'सर्व नोंदी / दुरुस्ती':'माझ्या नोंदी / दुरुस्ती'; }
+function startApp(){ document.body.classList.remove('guest'); setWho(); tab(1); loadInit().then(flush); qInfo(); instUI(); }
+$('lf').addEventListener('submit',async ev=>{
+  ev.preventDefault(); const u=$('lu').value.trim(), p=$('lp').value.trim();
+  if(!u||!p){ $('lerr').textContent='नाव व PIN भरा'; return; }
+  $('lb1').disabled=true; $('lerr').textContent='तपासत आहे…';
+  try{
+    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'login',u,p})})).json();
+    if(x.ok){ ME={u:x.u,p,name:x.name,role:x.role,users:x.users||[]}; if($('lr').checked) ls('me',ME); else localStorage.removeItem('me'); $('lp').value=''; startApp(); }
+    else $('lerr').textContent=x.error==='locked'?'खूप चुकीचे प्रयत्न – १० मिनिटांनी पुन्हा करा':'नाव किंवा PIN चुकीचा';
+  }catch(e){ $('lerr').textContent='इंटरनेट/URL तपासा'; }
+  $('lb1').disabled=false;
+});
+
 async function loadInit(){
-  try{ const r = await (await fetch(SCRIPT_URL+'?action=init')).json(); GP=r.gp; BK=r.banks; ls('init',r); }
+  try{ const r = await (await fetch(SCRIPT_URL)).json(); GP=r.gp; BK=r.banks; ls('init',r); }
   catch(e){ const r=ls('init')||{gp:[],banks:[]}; GP=r.gp; BK=r.banks; }
   fill($('dj'), uniq(GP.map(x=>x.j)).map(x=>[x]));
 }
@@ -188,7 +264,7 @@ const talukas = j => uniq(GP.filter(x=>x.j===j).map(x=>x.t));
 const gpsOf = (j,t) => { const s=new Map(); GP.filter(x=>x.j===j&&x.t===t).forEach(x=>s.set(x.e,x.m)); return [...s]; };
 const findGP = (j,t,raw) => GP.find(x=>x.j===j&&x.t===t&&(x.e.toLowerCase()===raw.toLowerCase()||x.m===raw));
 
-// ठिकाण
+// ===== ठिकाण =====
 $('j').addEventListener('input',()=>fill($('dt'), talukas($('j').value.trim()).map(x=>[x])));
 $('t').addEventListener('input',()=>fill($('dg'), gpsOf($('j').value.trim(),$('t').value.trim())));
 $('g').addEventListener('input',()=>{
@@ -198,21 +274,23 @@ $('g').addEventListener('input',()=>{
   else { $('gm').value=''; fill($('dv'),[]); }
 });
 
-// जॉबकार्ड
+// ===== जॉबकार्ड: MH-11-001-002-001  /  Family ID (१० पर्यंत अंक/अक्षरे/डॅश) =====
+const cleanFam = s => s.toUpperCase().replace(/[^0-9A-Z-]/g,'').replace(/^-+/,'').replace(/-{2,}/g,'-').slice(0,10);
 $('jc').addEventListener('input',ev=>{
-  const raw=$('jc').value.toUpperCase().replace(/^MH/,''), d=raw.replace(/\D/g,'');
+  const raw=$('jc').value.toUpperCase().replace(/^MH/,''), parts=raw.split('/'), d=parts[0].replace(/\D/g,'');
   const seg=[d.slice(0,2),d.slice(2,5),d.slice(5,8),d.slice(8,11)].filter(Boolean);
   $('jc').value='MH-'+seg.join('-');
-  if(d.length>11) $('fm').value=d.slice(11,17);
+  const tail = parts.length>1 ? parts.slice(1).join('') : d.slice(11);
+  if(tail) $('fm').value=cleanFam(tail);
   if(d.length>=11 && ev.inputType!=='deleteContentBackward') $('fm').focus();
 });
 $('jc').addEventListener('keydown',e=>{ if(e.key==='/'){ e.preventDefault(); $('fm').focus(); } });
 $('jc').addEventListener('focus',()=>{ if(!$('jc').value) $('jc').value='MH-'; });
-$('fm').addEventListener('input',()=>{ $('fm').value=$('fm').value.replace(/\D/g,'').slice(0,6); });
+$('fm').addEventListener('input',()=>{ $('fm').value=cleanFam($('fm').value); });
 $('fm').addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!$('fm').value) $('jc').focus(); });
 $('ap').addEventListener('input',()=>{ $('ap').value=$('ap').value.replace(/\D/g,'').slice(0,3); });
 
-// नावे: प्रत्येक शब्दाचे पहिले अक्षर कॅपिटल
+// ===== नावे: प्रत्येक शब्दाचे पहिले अक्षर कॅपिटल =====
 const title = s => s.replace(/[^A-Za-z .]/g,'').replace(/^\s+/,'').replace(/\s{2,}/g,' ').toLowerCase().replace(/(^|[ .])([a-z])/g,(m,a,b)=>a+b.toUpperCase());
 function nameField(id){ $(id).addEventListener('input',()=>{
   const el=$(id), p=el.selectionStart; el.value=title(el.value); try{ el.setSelectionRange(p,p); }catch(e){}
@@ -220,12 +298,12 @@ function nameField(id){ $(id).addEventListener('input',()=>{
 ['nm','an','acn'].forEach(nameField);
 $('same').addEventListener('change',()=>{ $('acn').readOnly=$('same').checked; if($('same').checked) $('acn').value=$('an').value; });
 
-// आधार, IFSC, खाते
+// ===== आधार, मोबाईल, IFSC, खाते =====
 $('aa').addEventListener('input',()=>{ const d=$('aa').value.replace(/\D/g,'').slice(0,12); $('aa').value=d.replace(/(\d{4})(?=\d)/g,'$1 '); });
 $('acc').addEventListener('input',()=>{ $('acc').value=$('acc').value.replace(/\D/g,'').slice(0,18); });
 $('mb').addEventListener('input',()=>{ $('mb').value=$('mb').value.replace(/\D/g,'').slice(0,10); });
 
-// बँक
+// ===== बँक =====
 const banksOf = t => BK.filter(b=>b.t.toLowerCase()===t.toLowerCase()).map(b=>b.n);
 function refreshBanks(clear){
   const l=banksOf($('bt').value); fill($('db'), l.map(x=>[x]));
@@ -236,13 +314,14 @@ $('bt').addEventListener('change',()=>refreshBanks(true));
 $('ifsc').addEventListener('input',()=>{ const v=$('ifsc').value.toUpperCase().replace(/[^A-Z0-9]/g,''); $('ifsc').value=v;
   if(v.startsWith('IPOS') && $('bt').value!=='Post Office'){ $('bt').value='Post Office'; refreshBanks(true); } });
 
-// तपासणी
+// ===== तपासणी =====
 function check(){
   const E={}, j=$('j').value.trim(), t=$('t').value.trim();
   if(!GP.some(x=>x.j===j&&x.t===t&&x.e===$('g').value)) E.loc='जिल्हा, तालुका व ग्रामपंचायत यादीतून निवडा';
   if(!$('vl').value.trim()) E.vl='गाव निवडा / लिहा';
-  if(!/^MH-\d{2}-\d{3}-\d{3}-\d{3}$/.test($('jc').value)) E.jc='जॉबकार्ड क्रमांक पूर्ण भरा (MH-11-001-002-001)';
-  else if(!$('fm').value) E.jc='/ नंतरचा क्रमांक (Family ID) भरा';
+  const jcOk=/^MH-\d{2}-\d{3}-\d{3}-\d{3}$/.test($('jc').value);
+  if(!jcOk && !(EDIT && $('jc').value==='MH-')) E.jc='जॉबकार्ड क्रमांक पूर्ण भरा (MH-11-001-002-001)';
+  else if(!/^[0-9A-Z][0-9A-Z-]{0,9}$/.test($('fm').value)) E.jc='/ नंतरचा भाग (Family ID) भरा – १० पर्यंत अंक/अक्षरे (उदा. 12 किंवा 12-A)';
   if(!$('ap').value) E.ap='अर्जदार क्रमांक भरा';
   if($('nm').value.trim().length<3) E.nm='नाव English मध्ये भरा';
   if(!/^[2-9]\d{11}$/.test($('aa').value.replace(/\s/g,''))) E.aa='आधार १२ अंकी असावा';
@@ -254,25 +333,27 @@ function check(){
   if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test($('ifsc').value)) E.ifsc='IFSC चुकीचा (११ अक्षरे, ५ वे अक्षर 0)';
   if($('acc').value.length<9) E.acc='खाते क्रमांक किमान ९ अंकी';
   if($('acn').value.trim().length<3) E.acn='खात्यावरील नाव भरा';
-  const map={loc:'g',vl:'vl',mb:'mb',jc:'jc',ap:'ap',nm:'nm',aa:'aa',an:'an',bt:'bt',bn:'bn',ifsc:'ifsc',acc:'acc',acn:'acn'};
+  const map={loc:'g',vl:'vl',jc:'jc',ap:'ap',nm:'nm',aa:'aa',an:'an',mb:'mb',bt:'bt',bn:'bn',ifsc:'ifsc',acc:'acc',acn:'acn'};
   Object.keys(map).forEach(k=>{ $('e_'+k).textContent=E[k]||''; $(map[k]).classList.toggle('bad',!!E[k]); });
   return !Object.keys(E).length;
 }
 
-async function send(rec){
-  const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(rec)});
-  return r.json();
-}
-function qInfo(){ const q=ls('q')||[]; $('qi').textContent=q.length?`${q.length} नोंदी पाठवायच्या बाकी आहेत (इंटरनेट आल्यावर आपोआप जातील)`:''; }
+// ===== इंटरनेट नसताना साठवलेल्या नोंदी =====
+const myQ = () => (ls('q')||[]).filter(i=>ME&&i.u===ME.u);
+function qInfo(){ const n=myQ().length; $('qi').textContent=n?`${n} नोंदी पाठवायच्या बाकी आहेत (इंटरनेट आल्यावर आपोआप जातील)`:''; }
 async function flush(){
-  const q=ls('q')||[], left=[];
-  for(const r of q){ try{ const x=await send({...r,replace:true}); if(!x.ok) left.push(r); }catch(e){ left.push(r); } }
+  if(!ME) return; const all=ls('q')||[], left=[];
+  for(const it of all){
+    if(it.u!==ME.u){ left.push(it); continue; }
+    try{ const x=await post({action:'save',...it.rec,replace:true}); if(!x.ok && x.status!=='locked') left.push(it); }
+    catch(e){ left.push(it); }
+  }
   ls('q',left); qInfo();
 }
 function lastLine(r,note,count){ if(count!==false) saved++; const el=$('last'); el.style.display='block';
   el.textContent=`शेवटची नोंद: ${r.name} – Family ID ${r.family}, अर्जदार ${r.applicant}${note||''} • या सत्रात एकूण ${saved} नोंदी`; }
 
-// जुनी नोंद बदलण्याची पुष्टी
+// ===== जुनी नोंद बदलण्याची पुष्टी =====
 const LBL={name:'नाव',aadhaar:'आधार क्रमांक',aadhaarName:'आधारप्रमाणे नाव',mobile:'मोबाईल नंबर',bank:'बँक',ifsc:'IFSC',account:'खाते क्रमांक',accountName:'खात्यावरील नाव'};
 function confirmReplace(old,changed,rec){ return new Promise(res=>{
   const tb=$('dtb'); tb.innerHTML='';
@@ -282,34 +363,50 @@ function confirmReplace(old,changed,rec){ return new Promise(res=>{
     tb.appendChild(tr); });
   const d=$('dlg'); d.returnValue=''; d.onclose=()=>res(d.returnValue==='yes'); d.showModal(); }); }
 
+// ===== जतन / दुरुस्ती =====
+function busy(b){ $('sb').disabled=b; $('sb').textContent=b?'जतन होत आहे…':(EDIT?'दुरुस्ती जतन करा':'जतन करा'); }
+const LOCKED = x => `✖ ही नोंद ${x.by} यांनी केली आहे – दुरुस्तीसाठी त्यांना किंवा Admin ला सांगा`;
 $('f').addEventListener('submit',async ev=>{
   ev.preventDefault();
   if(!check()){ show('जतन झाले नाही – लाल रंगातील चुका दुरुस्त करा','no'); const b=document.querySelector('.bad'); if(b) b.scrollIntoView({block:'center',behavior:'smooth'}); return; }
   const rec={jilha:$('j').value.trim(),taluka:$('t').value.trim(),gpE:$('g').value,gpM:$('gm').value,village:$('vl').value.trim(),
+    jobcard:$('jc').value==='MH-'?'':$('jc').value,
     family:$('fm').value,applicant:$('ap').value,name:$('nm').value.trim(),aadhaar:$('aa').value.replace(/\s/g,''),aadhaarName:$('an').value.trim(),mobile:$('mb').value,
     bank:$('bn').value.trim(),ifsc:$('ifsc').value,account:$('acc').value,accountName:$('acn').value.trim()};
-  $('sb').disabled=true; $('sb').textContent='जतन होत आहे…';
+  busy(true);
   try{
-    let x=await send(rec);
-    if(x.status==='exists'){
-      const yes=await confirmReplace(x.old,x.changed,rec);
-      if(!yes){ show('नोंद बदलली नाही – फॉर्म तसाच ठेवला आहे','no'); $('sb').disabled=false; $('sb').textContent='जतन करा'; return; }
-      x=await send({...rec,replace:true});
+    if(EDIT){
+      const x=await post({action:'update',orig:EDIT,rec});
+      if(x.ok){ show('✔ दुरुस्ती जतन झाली: '+rec.name,'ok'); lastLine(rec,' (दुरुस्त केली)',false); cancelEdit(true); tab(3); }
+      else if(x.status==='locked') show(LOCKED(x),'no');
+      else if(x.status==='conflict') show('✖ या गाव/Family ID/अर्जदार क्रमांकाची दुसरी नोंद आधीच आहे','no');
+      else show('✖ '+(x.error||'दुरुस्ती झाली नाही'),'no');
+    } else {
+      let x=await post({action:'save',...rec});
+      if(x.status==='exists'){
+        const yes=await confirmReplace(x.old,x.changed,rec);
+        if(!yes){ show('नोंद बदलली नाही – फॉर्म तसाच ठेवला आहे','no'); busy(false); return; }
+        x=await post({action:'save',...rec,replace:true});
+      }
+      if(x.ok){
+        if(x.status==='same'){ show('ही नोंद आधीच आहे (काहीही बदल नाही) – दुबार नोंद केली नाही','ok'); lastLine(rec,' (आधीच जतन होती)',false); }
+        else if(x.status==='replaced'){ show('✔ जुनी नोंद नव्या माहितीने बदलली: '+rec.name,'ok'); lastLine(rec,' (जुनी नोंद बदलली)'); }
+        else { show('✔ जतन झाले: '+rec.name,'ok'); lastLine(rec); }
+        resetForm();
+      } else if(x.status==='locked') show(LOCKED(x),'no');
+      else show('✖ जतन झाले नाही: '+(x.error||'अज्ञात त्रुटी')+' – पुन्हा प्रयत्न करा','no');
     }
-    if(x.ok){
-      if(x.status==='same'){ show('ही नोंद आधीच आहे (काहीही बदल नाही) – दुबार नोंद केली नाही','ok'); lastLine(rec,' (आधीच जतन होती)',false); }
-      else if(x.status==='replaced'){ show('✔ जुनी नोंद नव्या माहितीने बदलली: '+rec.name,'ok'); lastLine(rec,' (जुनी नोंद बदलली)'); }
-      else { show('✔ जतन झाले: '+rec.name,'ok'); lastLine(rec); }
-      resetForm();
-    } else show('✖ जतन झाले नाही: '+(x.error||'अज्ञात त्रुटी')+' – पुन्हा प्रयत्न करा','no');
   }catch(e){
-    const q=ls('q')||[]; q.push(rec); ls('q',q); qInfo();
-    show('इंटरनेट नाही – नोंद फोनमध्ये ठेवली, इंटरनेट आल्यावर आपोआप जाईल','ok'); lastLine(rec,' (फोनमध्ये, पाठवायची बाकी)'); resetForm();
+    if(e.message!=='auth'){
+      if(EDIT) show('इंटरनेट नाही – दुरुस्तीसाठी इंटरनेट हवे','no');
+      else { const q=ls('q')||[]; q.push({u:ME.u,rec}); ls('q',q); qInfo();
+        show('इंटरनेट नाही – नोंद फोनमध्ये ठेवली, इंटरनेट आल्यावर आपोआप जाईल','ok'); lastLine(rec,' (फोनमध्ये, पाठवायची बाकी)'); resetForm(); }
+    }
   }
-  $('sb').disabled=false; $('sb').textContent='जतन करा';
+  busy(false);
 });
 function resetForm(){
-  const keep=$('keep').checked;
+  const keep=$('keep').checked && !EDIT;
   ['ap','nm','aa','an','mb','bn','ifsc','acc','acn','bt'].forEach(k=>$(k).value='');
   if(!keep){ $('jc').value='MH-'; $('fm').value=''; }
   $('same').checked=true; $('acn').readOnly=true; refreshBanks(true);
@@ -318,16 +415,55 @@ function resetForm(){
 }
 window.addEventListener('online',flush);
 
-// टॅब (प्रत्येकाचा वेगळा रंग)
+// ===== दुरुस्ती मोड =====
+function setVal(id,v){ $(id).value=v||''; $(id).dispatchEvent(new Event('input')); }
+function editEntry(e){
+  EDIT={gpE:e.gpE,gpM:e.gpM,village:e.village,family:e.family,applicant:e.applicant};
+  tab(1);
+  setVal('j',e.jilha); setVal('t',e.taluka); setVal('g',e.gpE); setVal('vl',e.village);
+  $('jc').value=e.jobcard||'MH-'; $('fm').value=e.family; $('ap').value=e.applicant; setVal('nm',e.name);
+  setVal('aa',e.aadhaar); setVal('an',e.aadhaarName); setVal('mb',e.mobile);
+  const bk=BK.find(b=>b.n===e.bank); $('bt').value=bk?bk.t:''; refreshBanks(true); if(bk) $('bn').value=e.bank;
+  setVal('ifsc',e.ifsc); $('bt').value=bk?bk.t:$('bt').value; setVal('acc',e.account);
+  const same=e.accountName===e.aadhaarName; $('same').checked=same; $('acn').readOnly=same; $('acn').value=e.accountName||e.aadhaarName;
+  $('ebt').textContent='✏️ दुरुस्ती मोड: '+e.name+' (Family ID '+e.family+', अर्जदार '+e.applicant+')';
+  $('eb').classList.add('show'); $('keepw').style.display='none'; busy(false);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelEdit(quiet){ EDIT=null; $('eb').classList.remove('show'); $('keepw').style.display=''; resetForm(); busy(false); if(!quiet) show('दुरुस्ती रद्द केली','ok'); }
+$('ebx').onclick=()=>cancelEdit();
+
+// ===== नोंदी / दुरुस्ती यादी =====
+const mask = a => a? 'XXXX XXXX '+a.slice(-4) : '—';
+async function loadEntries(){
+  $('lm').textContent='शोधत आहे…'; const box=$('ll'); box.innerHTML='';
+  try{
+    const x=await post({action:'list',q:$('lq').value.trim(),by:$('lb').value});
+    if(!x.ok){ $('lm').textContent='त्रुटी: '+(x.error||''); return; }
+    if(ME.role==='admin'){ const cur=$('lb').value, s=$('lb'); s.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.textContent='सर्व'; s.appendChild(o0);
+      (x.users||[]).forEach(u=>{ const o=document.createElement('option'); o.value=u.u; o.textContent=u.name; s.appendChild(o); }); s.value=cur; }
+    $('lm').textContent=x.entries.length?`${x.entries.length} नोंदी (सर्वात नवीन आधी${x.entries.length>=100?', पहिल्या १००':''})`:'नोंदी सापडल्या नाहीत';
+    x.entries.forEach(e=>{
+      const c=document.createElement('div'); c.className='card';
+      const b=document.createElement('b'); b.textContent=e.name; c.appendChild(b);
+      [`${e.gpM||e.gpE} • ${e.village}`,`Family ID ${e.family} • अर्जदार ${e.applicant} • आधार ${mask(e.aadhaar)}`,`नोंद करणारा: ${e.byName||'—'}`].forEach(t=>{ const s=document.createElement('small'); s.textContent=t; c.appendChild(s); });
+      const bt=document.createElement('button'); bt.type='button'; bt.className='btn sm'; bt.textContent='दुरुस्त करा'; bt.onclick=()=>editEntry(e); c.appendChild(bt);
+      box.appendChild(c); });
+  }catch(e){ if(e.message!=='auth') $('lm').textContent='इंटरनेट/URL तपासा'; }
+}
+$('ls').onclick=loadEntries;
+$('lq').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); loadEntries(); } });
+
+// ===== टॅब (प्रत्येकाचा वेगळा रंग) =====
 function tab(n){
   document.body.dataset.tab=n;
-  $('n1').classList.toggle('on',n===1); $('n2').classList.toggle('on',n===2);
-  $('p1').classList.toggle('hide',n!==1); $('p2').classList.toggle('hide',n!==2);
+  [1,2,3].forEach(i=>{ $('n'+i).classList.toggle('on',i===n); $('p'+i).classList.toggle('hide',i!==n); });
   $('tc').content=getComputedStyle(document.body).getPropertyValue('--ac').trim()||'#1d6b3b';
+  if(n===3 && ME) loadEntries();
 }
-$('n1').onclick=()=>tab(1); $('n2').onclick=()=>tab(2);
+$('n1').onclick=()=>tab(1); $('n2').onclick=()=>tab(2); $('n3').onclick=()=>tab(3);
 
-// Excel
+// ===== Excel (Admin) =====
 function xVillages(){
   const j=$('xj').value.trim(), t=$('xt').value.trim(), g=$('xg').value.trim();
   const v=uniq(GP.filter(x=>x.j===j&&x.t===t&&(!g||x.e===g)).map(x=>x.v)), s=$('xv');
@@ -337,20 +473,20 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
-
 async function dl(kind){
   const j=$('xj').value.trim(), t=$('xt').value.trim(), g=$('xg').value.trim(), v=$('xv').value;
   if(!j||!t){ $('xm').textContent='जिल्हा व तालुका निवडा'; return; }
   $('xm').textContent='डेटा आणत आहे…';
   try{
-    const u=SCRIPT_URL+'?action=data&jilha='+encodeURIComponent(j)+'&taluka='+encodeURIComponent(t)+'&gp='+encodeURIComponent(g)+'&village='+encodeURIComponent(v);
-    const r=await (await fetch(u)).json(), rows=r[kind];
+    const r=await post({action:'export',jilha:j,taluka:t,gp:g,village:v});
+    if(!r.ok){ $('xm').textContent='फक्त Admin ला डाउनलोड करता येते'; return; }
+    const rows=r[kind];
     if(rows.length<2){ $('xm').textContent='यासाठी अजून नोंदी नाहीत'; return; }
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),kind==='a'?'Aadhaar Data':'Bank Data');
     const nm=(v||g||t).replace(/[\\/:*?"<>|]/g,'_')+(kind==='a'?'_Aadhaar.xlsx':'_Account.xlsx');
     XLSX.writeFile(wb,nm); $('xm').textContent=(rows.length-1)+' नोंदी डाउनलोड झाल्या: '+nm;
-  }catch(e){ $('xm').textContent='डाउनलोड अयशस्वी – इंटरनेट/URL तपासा'; }
+  }catch(e){ if(e.message!=='auth') $('xm').textContent='डाउनलोड अयशस्वी – इंटरनेट/URL तपासा'; }
 }
 $('xa').onclick=()=>dl('a'); $('xb').onclick=()=>dl('b');
 
@@ -366,16 +502,19 @@ function instUI(){
   else if(isIOS){ $('instTxt').textContent='Safari मध्ये खालच्या Share बटणावर दाबा, मग "Add to Home Screen" निवडा.'; $('instBtn').style.display='none'; }
   else { $('instTxt').textContent='Chrome मध्ये उघडा, मग वर उजवीकडे ⋮ मेनूमध्ये "Install app" / "Add to Home screen" दाबा.'; $('instBtn').textContent='कसे?'; }
 }
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); dp=e; instUI(); });
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); dp=e; if(ME) instUI(); });
 window.addEventListener('appinstalled',()=>{ $('inst').classList.remove('show'); show('✔ ABPS ॲप इन्स्टॉल झाले – Home screen वर पाहा','ok'); });
 $('instBtn').onclick=async()=>{
   if(dp){ dp.prompt(); await dp.userChoice; dp=null; $('inst').classList.remove('show'); }
   else alert($('instTxt').textContent);
 };
 $('instX').onclick=()=>{ sessionStorage.setItem('instX','1'); $('inst').classList.remove('show'); };
-instUI();
 
-loadInit().then(flush); qInfo(); tab(1);
+// ===== सुरुवात =====
+ME=ls('me');
+if(ME){ startApp();
+  post({action:'login'}).then(x=>{ if(x.ok){ ME.name=x.name; ME.role=x.role; ME.users=x.users||[]; ls('me',ME); setWho(); } }).catch(()=>{});
+} else showLogin();
 </script>
 </body>
 </html>
