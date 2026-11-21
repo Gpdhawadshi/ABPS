@@ -177,6 +177,13 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 </div><div class="err" id="e_loc"></div>
 </fieldset>
 
+<fieldset id="pkf"><legend>मजूर यादीतून निवडा (ऐच्छिक – वेळ वाचतो)</legend>
+<label for="rq">नाव (मराठी / English) किंवा जॉबकार्डमधील / नंतरचा क्रमांक</label>
+<input id="rq" type="search" autocomplete="off" placeholder="आधी वर ग्रामपंचायत निवडा, मग टाइप करा">
+<div class="hint" id="rh"></div>
+<div id="rr" style="margin-top:8px"></div>
+</fieldset>
+
 <fieldset><legend>जॉबकार्ड व लाभार्थी</legend>
 <div class="jr">
  <div><label for="jc">जॉबकार्ड क्रमांक</label><input id="jc" inputmode="numeric" value="MH-" placeholder="MH-11-001-002-001"></div>
@@ -264,7 +271,7 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 <fieldset><legend>PDF यादी</legend>
 <div class="row"><input type="checkbox" id="pm"><label for="pm" style="margin:0">फक्त मोबाईल नंबर नसलेले मजूर</label></div>
 <button class="btn" id="pdfb" type="button" style="margin-top:8px">PDF बनवा</button>
-<div class="hint" id="pdfm">वर निवडलेली ग्रामपंचायत = तिची PDF. ग्रामपंचायत रिकामी = पूर्ण तालुका (प्रत्येक ग्रामपंचायत वेगळ्या पानापासून). PDF मध्ये: नाव, अर्जदार क्रमांक, जॉबकार्ड क्रमांक, मोबाईल नंबर.</div>
+<div class="hint" id="pdfm">वर निवडलेली ग्रामपंचायत = तिची PDF. ग्रामपंचायत रिकामी = पूर्ण तालुका (प्रत्येक ग्रामपंचायत वेगळ्या पानापासून). PDF मध्ये: नाव, अर्जदार क्रमांक, जॉबकार्ड क्रमांक, मोबाईल नंबर. पूर्ण तालुक्याची (हजारो मजूर) PDF संगणकावर काढणे चांगले.</div>
 </fieldset>
 </section>
 </main>
@@ -287,7 +294,7 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIhK2Df25uc_OkOFXGwQrz4M7HjJq4Z5w-qpYlgwGubgePJNleDQYcPqHcRMarlBfj7g/exec';
 // ===============================================
 const $ = id => document.getElementById(id);
-let GP = [], BK = [], saved = 0, ME = null, EDIT = null;
+let GP = [], BK = [], saved = 0, ME = null, EDIT = null, PICK = null, RW = [];
 const uniq = a => [...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,'mr'));
 const fill = (dl, items) => { dl.innerHTML=''; items.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;if(l)o.label=l;dl.appendChild(o);}); };
 const ls = (k,v) => { try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } };
@@ -360,8 +367,9 @@ $('t').addEventListener('input',()=>fill($('dg'), gpsOf($('j').value.trim(),$('t
 $('g').addEventListener('input',()=>{
   const j=$('j').value.trim(), t=$('t').value.trim(), m=findGP(j,t,$('g').value.trim());
   if(m){ $('g').value=m.e; $('gm').value=m.m;
-    fill($('dv'), uniq(GP.filter(x=>x.j===j&&x.t===t&&x.e===m.e).map(x=>x.v)).map(x=>[x])); }
-  else { $('gm').value=''; fill($('dv'),[]); }
+    fill($('dv'), uniq(GP.filter(x=>x.j===j&&x.t===t&&x.e===m.e).map(x=>x.v)).map(x=>[x]));
+    PICK=null; loadRegWorkers(m); }
+  else { $('gm').value=''; fill($('dv'),[]); RW=[]; PICK=null; renderReg(); }
 });
 
 // ===== जॉबकार्ड: MH-11-001-002-001  /  Family ID (१० पर्यंत अंक/अक्षरे/डॅश) =====
@@ -479,6 +487,7 @@ $('f').addEventListener('submit',async ev=>{
         x=await post({action:'save',...rec,replace:true});
       }
       if(x.ok){
+        if(PICK) PICK.done=true;
         if(x.status==='same'){ show('ही नोंद आधीच आहे (काहीही बदल नाही) – दुबार नोंद केली नाही','ok'); lastLine(rec,' (आधीच जतन होती)',false); }
         else if(x.status==='replaced'){ show('✔ जुनी नोंद नव्या माहितीने बदलली: '+rec.name,'ok'); lastLine(rec,' (जुनी नोंद बदलली)'); }
         else { show('✔ जतन झाले: '+rec.name,'ok'); lastLine(rec); }
@@ -501,7 +510,9 @@ function resetForm(){
   if(!keep){ $('jc').value='MH-'; $('fm').value=''; }
   $('same').checked=true; $('acn').readOnly=true; refreshBanks(true);
   document.querySelectorAll('.err').forEach(e=>e.textContent=''); document.querySelectorAll('.bad').forEach(e=>e.classList.remove('bad'));
-  (keep?$('ap'):$('jc')).focus();
+  PICK=null; $('rq').value=''; $('rr').innerHTML='';
+  $('rh').textContent=RW.length?`${RW.length} मजूर यादीत – पुढचे नाव किंवा / नंतरचा क्रमांक टाइप करा`:'';
+  (keep?$('ap'):(RW.length?$('rq'):$('jc'))).focus();
 }
 window.addEventListener('online',flush);
 
@@ -581,10 +592,80 @@ async function dl(kind){
 }
 $('xa').onclick=()=>dl('a'); $('xb').onclick=()=>dl('b');
 
-// ===== मोबाईल नंबर टॅब + PDF =====
-let W=[], wKey='', mobReady=false, mobLoadId=0;
-const toW = (r,j,t) => ({j,t,gpE:r[0],gpM:r[1],village:r[2],jobcard:r[3],applicant:r[4],nameM:r[5],nameE:r[6],mobile:r[7],
+// ===== मजूर यादी (Workers शीट) – एकदा आणून साठवतो =====
+const WC=new Map();
+const toW = (r,j,t) => ({j,t,gpE:r[0],gpM:r[1],village:r[2],jobcard:r[3],applicant:r[4],nameM:r[5],nameE:r[6],mobile:r[7],done:!!r[8],
   fam:(r[3].split('/')[1]||'').toLowerCase(), nm:(r[5]+' '+r[6]).toLowerCase()});
+async function getWorkers(j,t,gE,force){
+  const key=j+'|'+t+'|'+gE, c=WC.get(key);
+  if(c && !force && Date.now()-c.t<600000) return c.rows;
+  const x=await post({action:'workers',jilha:j,taluka:t,gp:gE});
+  if(!x.ok) throw new Error(x.error||'त्रुटी');
+  const rows=x.rows.map(r=>toW(r,j,t)); WC.set(key,{t:Date.now(),rows}); return rows;
+}
+// नाव / जॉबकार्डमधील / नंतरचा क्रमांक यावरून शोध (टाइप करताच)
+function searchW(list,qRaw,village){
+  const q=qRaw.trim().toLowerCase().replace(/^\//,''), v=village.trim().toLowerCase(), out=[];
+  if(!q) return null;
+  const vOk=v && list.some(w=>w.village.toLowerCase()===v);
+  list.forEach(w=>{
+    if(vOk && w.village.toLowerCase()!==v) return;
+    let rk=-1;
+    if(w.fam===q) rk=0; else if(w.fam && w.fam.startsWith(q)) rk=1;
+    else if(w.nm.split(/\s+/).some(x=>x.startsWith(q))) rk=2;
+    else if(q.length>=2 && w.nm.includes(q)) rk=3;
+    else if(q.length>=3 && w.jobcard.toLowerCase().includes(q)) rk=4;
+    if(rk>=0) out.push([rk,w]);
+  });
+  out.sort((a,b)=>a[0]-b[0]||a[1].village.localeCompare(b[1].village,'mr')||a[1].nameM.localeCompare(b[1].nameM,'mr'));
+  return out.map(x=>x[1]);
+}
+const wTitle = w => [w.nameM,w.nameE].filter(Boolean).join(' / ');
+
+// ===== नोंदणी टॅब: यादीतून मजूर निवडा → फॉर्म आपोआप भरतो =====
+const fmtJc = d => 'MH-'+[d.slice(0,2),d.slice(2,5),d.slice(5,8),d.slice(8,11)].filter(Boolean).join('-');
+let rwId=0;
+async function loadRegWorkers(m){
+  const j=$('j').value.trim(), t=$('t').value.trim(), id=++rwId; RW=[]; $('rr').innerHTML='';
+  $('rh').textContent='मजूर यादी आणत आहे…';
+  try{
+    const rows=await getWorkers(j,t,m.e); if(id!==rwId) return; RW=rows;
+    fill($('dv'), uniq(RW.map(w=>w.village).concat(GP.filter(x=>x.j===j&&x.t===t&&x.e===m.e).map(x=>x.v))).map(v=>[v]));
+    $('rh').textContent=RW.length?`${RW.length} मजूर यादीत – नाव किंवा / नंतरचा क्रमांक टाइप करा (गाव निवडले असेल तर फक्त त्या गावातील)`:'या ग्रामपंचायतीची मजूर यादी नाही – खाली स्वतः माहिती भरा';
+    renderReg();
+  }catch(e){ if(e.message!=='auth' && id===rwId) $('rh').textContent='यादी आणता आली नाही (इंटरनेट/URL) – खाली स्वतः भरू शकता'; }
+}
+function renderReg(){
+  const box=$('rr'); box.innerHTML='';
+  if(!RW.length) return;
+  const out=searchW(RW,$('rq').value,$('vl').value);
+  if(out===null){ return; }
+  $('rh').textContent=out.length?`${out.length} सापडले${out.length>20?' (पहिले २० दाखवले – अजून टाइप करा)':''}`:'कोणी सापडले नाही';
+  out.slice(0,20).forEach(w=>{
+    const c=document.createElement('div'); c.className='card';
+    const b=document.createElement('b'); b.textContent=wTitle(w)+(w.done?'  ✔ नोंद झाली':''); c.appendChild(b);
+    const s=document.createElement('small'); s.textContent=`जॉबकार्ड: ${w.jobcard} • अर्जदार: ${w.applicant}${w.village?' • '+w.village:''}${w.mobile?' • 📱 '+w.mobile:''}`; c.appendChild(s);
+    const bt=document.createElement('button'); bt.type='button'; bt.className='btn sm'; bt.textContent=w.done?'पुन्हा उघडा':'निवडा'; bt.onclick=()=>pickWorker(w); c.appendChild(bt);
+    box.appendChild(c);
+  });
+}
+function pickWorker(w){
+  PICK=w; EDIT=null; $('eb').classList.remove('show');
+  setVal('vl',w.village);
+  $('jc').value=fmtJc(w.jobcard.split('/')[0].replace(/^MH/i,'').replace(/\D/g,''));
+  $('fm').value=cleanFam(w.jobcard.split('/')[1]||'');
+  $('ap').value=(w.applicant||'').replace(/\D/g,'').slice(0,3);
+  setVal('nm',w.nameE); $('mb').value=(w.mobile||'').slice(0,10);
+  $('rr').innerHTML=''; $('rq').value='';
+  $('rh').textContent='✔ निवडले: '+wTitle(w)+' – आता आधार व बँक तपशील भरा';
+  document.querySelectorAll('.err').forEach(e=>e.textContent=''); document.querySelectorAll('.bad').forEach(e=>e.classList.remove('bad'));
+  $('aa').focus();
+}
+$('rq').addEventListener('input',renderReg);
+$('vl').addEventListener('input',()=>{ if($('rq').value) renderReg(); });
+
+// ===== मोबाईल टॅब =====
+let W=[], wKey='', mobReady=false, mobLoadId=0;
 function mobInit(){ if(mobReady) return; mobReady=true; const s=ls('mloc'); if(s&&s.j){ setVal('mj',s.j); setVal('mt',s.t); setVal('mg',s.g); } }
 $('mj').addEventListener('input',()=>fill($('dmt'), talukas($('mj').value.trim()).map(x=>[x])));
 $('mt').addEventListener('input',()=>fill($('dmg'), gpsOf($('mj').value.trim(),$('mt').value.trim())));
@@ -595,42 +676,27 @@ $('mg').addEventListener('input',()=>{
 });
 $('mv').addEventListener('input',renderRes);
 $('mq').addEventListener('input',renderRes);
-
 async function loadWorkers(m){
   const j=$('mj').value.trim(), t=$('mt').value.trim(), key=j+'|'+t+'|'+m.e;
   if(key===wKey){ renderRes(); return; }
   const id=++mobLoadId; $('mi').textContent='मजूर यादी आणत आहे…';
   try{
-    const x=await post({action:'workers',jilha:j,taluka:t,gp:m.e});
-    if(id!==mobLoadId) return;
-    if(!x.ok){ $('mi').textContent='त्रुटी: '+(x.error||''); return; }
-    W=x.rows.map(r=>toW(r,j,t)); wKey=key;
+    const rows=await getWorkers(j,t,m.e); if(id!==mobLoadId) return;
+    W=rows; wKey=key;
     fill($('dmv'), uniq(W.map(w=>w.village)).map(v=>[v]));
     $('mi').textContent=W.length?`${W.length} मजूर लोड झाले – खाली शोध सुरू करा`:'या ग्रामपंचायतीचे मजूर यादीत नाहीत (Admin ने Workers शीटमध्ये यादी भरावी)';
     renderRes();
   }catch(e){ if(e.message!=='auth' && id===mobLoadId) $('mi').textContent='इंटरनेट/URL तपासा'; }
 }
-
 function renderRes(){
   const box=$('mr'); box.innerHTML='';
-  const q=$('mq').value.trim().toLowerCase().replace(/^\//,''), v=$('mv').value.trim().toLowerCase();
   if(!W.length){ $('mh').textContent=''; return; }
-  if(!q){ $('mh').textContent='नाव किंवा / नंतरचा क्रमांक टाइप करा'; return; }
-  const out=[];
-  W.forEach(w=>{
-    if(v && w.village.toLowerCase()!==v) return;
-    let rk=-1;
-    if(w.fam===q) rk=0; else if(w.fam && w.fam.startsWith(q)) rk=1;
-    else if(w.nm.split(/\s+/).some(x=>x.startsWith(q))) rk=2;
-    else if(q.length>=2 && w.nm.includes(q)) rk=3;
-    else if(q.length>=3 && w.jobcard.toLowerCase().includes(q)) rk=4;
-    if(rk>=0) out.push([rk,w]);
-  });
-  out.sort((a,b)=>a[0]-b[0]||a[1].nameM.localeCompare(b[1].nameM,'mr'));
+  const out=searchW(W,$('mq').value,$('mv').value);
+  if(out===null){ $('mh').textContent='नाव किंवा / नंतरचा क्रमांक टाइप करा'; return; }
   $('mh').textContent=out.length?`${out.length} सापडले${out.length>30?' (पहिले ३० दाखवले – अजून टाइप करून कमी करा)':''}`:'कोणी सापडले नाही';
-  out.slice(0,30).forEach(([,w])=>{
+  out.slice(0,30).forEach(w=>{
     const c=document.createElement('div'); c.className='card mcard';
-    const b=document.createElement('b'); b.textContent=[w.nameM,w.nameE].filter(Boolean).join(' / '); c.appendChild(b);
+    const b=document.createElement('b'); b.textContent=wTitle(w); c.appendChild(b);
     const s=document.createElement('small'); s.textContent=`जॉबकार्ड: ${w.jobcard} • अर्जदार: ${w.applicant}${w.village?' • '+w.village:''}`; c.appendChild(s);
     const r=document.createElement('div'); r.className='mrow';
     const inp=document.createElement('input'); inp.type='tel'; inp.inputMode='numeric'; inp.maxLength=10; inp.placeholder='मोबाईल नंबर'; inp.value=w.mobile||'';
@@ -646,7 +712,7 @@ async function saveMob(w,inp,btn,st){
   if(m && !/^[6-9]\d{9}$/.test(m)){ st.textContent='मोबाईल नंबर १० अंकी असावा (६ ते ९ ने सुरू होणारा)'; st.className='st bad'; return; }
   btn.disabled=true; st.className='st'; st.textContent='जतन होत आहे…';
   try{
-    const x=await post({action:'setmobile',jilha:w.j,taluka:w.t,gpE:w.gpE,jobcard:w.jobcard,applicant:w.applicant,mobile:m});
+    const x=await post({action:'setmobile',jilha:w.j,taluka:w.t,gpE:w.gpE,gpM:w.gpM,village:w.village,jobcard:w.jobcard,applicant:w.applicant,name:w.nameE||w.nameM,mobile:m,reg:w.done?1:0});
     if(x.ok){ w.mobile=m; st.textContent=m?'✔ जतन झाले':'✔ नंबर काढला'; st.className='st ok'; }
     else { st.textContent='✖ '+(x.error||'जतन झाले नाही'); st.className='st bad'; }
   }catch(e){ if(e.message!=='auth'){ st.textContent='✖ इंटरनेट नाही – जतन झाले नाही'; st.className='st bad'; } }
