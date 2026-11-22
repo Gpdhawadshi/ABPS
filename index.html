@@ -235,12 +235,12 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 <section id="p2" class="hide">
 <fieldset><legend>Excel फाइल (फक्त Admin)</legend>
 <div class="g">
- <div><label for="xj">जिल्हा</label><input id="xj" list="dj"></div>
- <div><label for="xt">तालुका</label><input id="xt" list="dxt"></div>
+ <div><label for="xj">जिल्हा – ऐच्छिक</label><input id="xj" list="dj"></div>
+ <div><label for="xt">तालुका – ऐच्छिक</label><input id="xt" list="dxt"></div>
  <div><label for="xg">ग्रामपंचायत (English) – ऐच्छिक</label><input id="xg" list="dxg" placeholder="रिकामी = सर्व"></div>
  <div><label for="xv">गाव</label><select id="xv"><option value="">सर्व गावे</option></select></div>
 </div>
-<p class="hint">Aadhaar व Account (Bank) अशा दोन वेगळ्या फाइल डाउनलोड होतात.</p>
+<p class="hint">Aadhaar व Account (Bank) अशा दोन वेगळ्या फाइल डाउनलोड होतात. <b>सर्व रिकामे ठेवल्यास शीटमधील सर्व नोंदी</b> मिळतात (कोणतीही गाळणी नाही). खाली दिसणारी संख्या शीटशी जुळवून पाहा.</p>
 <button class="btn" id="xa" type="button">Aadhaar फाइल डाउनलोड करा</button>
 <button class="btn b3" id="xb" type="button">Account (Bank) फाइल डाउनलोड करा</button>
 <div id="xm" class="hint"></div>
@@ -697,15 +697,18 @@ function wTable(list){
 const printNow = title => { document.title=title; document.body.classList.add('printing'); setTimeout(()=>window.print(),350); };
 
 // ===== नोंदणी टॅब: नोंद झालेले / न झालेले मजूर PDF =====
-function printReg(list,m,vname){
+function printReg(list,m,vname,ex){
+  ex=ex||[];
   PDF=null; const pv=$('pv'), num={numeric:true}; pv.innerHTML='';
-  const arr=list.map(w=>[w.gpE,w.gpM,w.village,w.jobcard,w.applicant,w.nameM,w.nameE,w.mobile,w.done?1:0])
-    .sort((a,b)=>a[2].localeCompare(b[2],'mr')||a[3].localeCompare(b[3],undefined,num)||a[4].localeCompare(b[4],undefined,num));
-  const done=arr.filter(r=>r[8]), pend=arr.filter(r=>!r[8]);
+  const cmp=(a,b)=>a[2].localeCompare(b[2],'mr')||a[3].localeCompare(b[3],undefined,num)||a[4].localeCompare(b[4],undefined,num);
+  const arr=list.map(w=>[w.gpE,w.gpM,w.village,w.jobcard,w.applicant,w.nameM,w.nameE,w.mobile,w.done?1:0]).sort(cmp);
+  const done=arr.filter(r=>r[8]), pend=arr.filter(r=>!r[8]), exs=ex.slice().sort(cmp);
   const sec=document.createElement('section'); sec.className='pg';
   const h=document.createElement('h2'); h.textContent='ग्रामपंचायत: '+(m.m||m.e)+' ('+m.e+')'; sec.appendChild(h);
-  const p=document.createElement('p'); p.textContent=`जिल्हा: ${$('j').value.trim()} • तालुका: ${$('t').value.trim()}${vname?' • गाव: '+vname:''} • एकूण मजूर: ${arr.length} • नोंद झालेले: ${done.length} • नोंद न झालेले: ${pend.length} • दिनांक: ${new Date().toLocaleDateString('mr-IN')}`; sec.appendChild(p);
-  [['✔ नोंद झालेले मजूर',done],['✖ नोंद न झालेले मजूर',pend]].forEach(([t,l])=>{
+  const p=document.createElement('p'); p.textContent=`जिल्हा: ${$('j').value.trim()} • तालुका: ${$('t').value.trim()}${vname?' • गाव: '+vname:''} • एकूण मजूर: ${arr.length} • नोंद झालेले: ${done.length} • नोंद न झालेले: ${pend.length}${exs.length?' • यादीत न जुळलेल्या नोंदी: '+exs.length:''} • शीटमधील एकूण नोंदी: ${done.length+exs.length} • दिनांक: ${new Date().toLocaleDateString('mr-IN')}`; sec.appendChild(p);
+  const groups=[['✔ नोंद झालेले मजूर',done],['✖ नोंद न झालेले मजूर',pend]];
+  if(exs.length) groups.push(['⚠ नोंद झाली आहे पण मजूर यादीत जुळत नाही (जॉबकार्ड/अर्जदार क्रमांक तपासा)',exs]);
+  groups.forEach(([t,l])=>{
     const h3=document.createElement('h3'); h3.textContent=`${t} (${l.length})`; sec.appendChild(h3);
     if(l.length) sec.appendChild(wTable(l)); else { const e=document.createElement('p'); e.textContent='—'; sec.appendChild(e); } });
   pv.appendChild(sec); printNow(`${m.e}${vname?'_'+vname:''}_नोंद_झालेले_न_झालेले`);
@@ -715,10 +718,14 @@ $('rpb').onclick=async()=>{
   if(!m){ M.textContent='आधी वर जिल्हा, तालुका व ग्रामपंचायत निवडा'; return; }
   $('rpb').disabled=true; M.textContent='मजूर यादी आणत आहे…';
   try{
-    const rows=await getWorkers(j,t,m.e,true), v=$('vl').value.trim().toLowerCase(), vOk=v&&rows.some(w=>w.village.toLowerCase()===v);
+    const x=await post({action:'workers',jilha:j,taluka:t,gp:m.e,extra:true});
+    if(!x.ok){ M.textContent='त्रुटी: '+(x.error||''); $('rpb').disabled=false; return; }
+    const rows=x.rows.map(r=>toW(r,j,t)); WC.set(j+'|'+t+'|'+m.e,{t:Date.now(),rows});
+    const v=$('vl').value.trim().toLowerCase(), vOk=v&&rows.some(w=>w.village.toLowerCase()===v);
     const list=rows.filter(w=>!vOk||w.village.toLowerCase()===v);
-    if(!list.length) M.textContent='या ग्रामपंचायतीची मजूर यादी नाही';
-    else { M.textContent=`${list.length} मजूर – प्रिंट विंडो उघडेल: "Save as PDF" निवडा`; printReg(list,m,vOk?$('vl').value.trim():''); }
+    const ex=(x.extra||[]).filter(r=>!vOk||r[2].toLowerCase()===v);
+    if(!list.length && !ex.length) M.textContent='या ग्रामपंचायतीची मजूर यादी / नोंदी नाहीत';
+    else { M.textContent=`${list.length} मजूर, ${ex.length?ex.length+' यादीत न जुळलेल्या नोंदी – ':''}प्रिंट विंडो उघडेल: "Save as PDF" निवडा`; printReg(list,m,vOk?$('vl').value.trim():'',ex); }
   }catch(e){ if(e.message!=='auth') M.textContent='इंटरनेट/URL तपासा'; }
   $('rpb').disabled=false;
 };
@@ -778,17 +785,19 @@ $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim()
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
 async function dl(kind){
   const j=$('xj').value.trim(), t=$('xt').value.trim(), g=$('xg').value.trim(), v=$('xv').value;
-  if(!j||!t){ $('xm').textContent='जिल्हा व तालुका निवडा'; return; }
   $('xm').textContent='डेटा आणत आहे…';
   try{
     const r=await post({action:'export',jilha:j,taluka:t,gp:g,village:v});
     if(!r.ok){ $('xm').textContent='फक्त Admin ला डाउनलोड करता येते'; return; }
-    const rows=r[kind];
-    if(rows.length<2){ $('xm').textContent='यासाठी अजून नोंदी नाहीत'; return; }
+    const rows=r[kind], total=kind==='a'?r.totalA:r.totalB, n=rows.length-1;
+    let warn='';
+    if(r.unknown && r.unknown.length && kind==='a') warn=` ⚠ ${r.unknown.reduce((s,x)=>s+x.n,0)} नोंदींची ग्रामपंचायत नावे GP_List शी जुळत नाहीत: `+r.unknown.map(x=>`${x.gp} (${x.n})`).join(', ')+' – त्या घेण्यासाठी जिल्हा, तालुका, ग्रामपंचायत व गाव रिकामे ठेवा.';
+    else if(n<total) warn=` (शीटमध्ये एकूण ${total} आहेत; बाकी तुमच्या निवडीबाहेर – सर्व हवे असतील तर निवड रिकामी ठेवा)`;
+    if(rows.length<2){ $('xm').textContent='या निवडीसाठी नोंदी नाहीत. शीटमध्ये एकूण '+total+' नोंदी आहेत.'+warn; return; }
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),kind==='a'?'Aadhaar Data':'Bank Data');
-    const nm=(v||g||t).replace(/[\\/:*?"<>|]/g,'_')+(kind==='a'?'_Aadhaar.xlsx':'_Account.xlsx');
-    XLSX.writeFile(wb,nm); $('xm').textContent=(rows.length-1)+' नोंदी डाउनलोड झाल्या: '+nm;
+    const nm=(v||g||t||j||'सर्व').replace(/[\\/:*?"<>|]/g,'_')+(kind==='a'?'_Aadhaar.xlsx':'_Account.xlsx');
+    XLSX.writeFile(wb,nm); $('xm').textContent=`${n} नोंदी डाउनलोड झाल्या (शीटमध्ये एकूण ${total}): ${nm}.`+warn;
   }catch(e){ if(e.message!=='auth') $('xm').textContent='डाउनलोड अयशस्वी – इंटरनेट/URL तपासा'; }
 }
 $('xa').onclick=()=>dl('a'); $('xb').onclick=()=>dl('b');
