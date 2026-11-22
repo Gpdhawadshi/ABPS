@@ -271,6 +271,7 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 <fieldset><legend>PDF यादी</legend>
 <div class="row"><input type="checkbox" id="pm"><label for="pm" style="margin:0">फक्त मोबाईल नंबर नसलेले मजूर</label></div>
 <button class="btn" id="pdfb" type="button" style="margin-top:8px">PDF बनवा</button>
+<button class="btn b3 hide" id="pdfn" type="button"></button>
 <div class="hint" id="pdfm">वर निवडलेली ग्रामपंचायत = तिची PDF. ग्रामपंचायत रिकामी = पूर्ण तालुका (प्रत्येक ग्रामपंचायत वेगळ्या पानापासून). PDF मध्ये: नाव, अर्जदार क्रमांक, जॉबकार्ड क्रमांक, मोबाईल नंबर. पूर्ण तालुक्याची (हजारो मजूर) PDF संगणकावर काढणे चांगले.</div>
 </fieldset>
 </section>
@@ -734,43 +735,56 @@ async function saveMob(w,inp,btn,st){
 }
 
 // PDF: ग्रामपंचायतवार (प्रत्येक वेगळ्या पानापासून) किंवा पूर्ण तालुका – ब्राउझरच्या Print → Save as PDF ने
-function cleanPrint(){ document.body.classList.remove('printing'); $('pv').innerHTML=''; document.title='ABPS'; }
+let PDF=null;
+function cleanPrint(){
+  document.body.classList.remove('printing'); $('pv').innerHTML=''; document.title='ABPS';
+  if(PDF && PDF.idx+1<PDF.parts.length){ const b=$('pdfn'); b.textContent=`पुढचा भाग बनवा (${PDF.idx+2}/${PDF.parts.length})`; b.classList.remove('hide'); }
+}
 window.addEventListener('afterprint',cleanPrint);
+// मोठी यादी (हजारो मजूर) एकाच वेळी प्रिंट होत नाही – म्हणून ~१२,००० मजुरांचे भाग (ग्रामपंचायत न तोडता) केले जातात
+function printPart(i){
+  const parts=PDF.parts, pv=$('pv'), M=$('pdfm'), num={numeric:true}; PDF.idx=i; $('pdfn').classList.add('hide'); pv.innerHTML='';
+  const today=new Date().toLocaleDateString('mr-IN'); let total=0;
+  parts[i].forEach(([ge,list])=>{
+    list.sort((a,b)=>a[2].localeCompare(b[2],'mr')||a[3].localeCompare(b[3],undefined,num)||a[4].localeCompare(b[4],undefined,num));
+    total+=list.length;
+    const sec=document.createElement('section'); sec.className='pg';
+    const h=document.createElement('h2'); h.textContent='ग्रामपंचायत: '+(list[0][1]||ge)+' ('+ge+')'; sec.appendChild(h);
+    const p=document.createElement('p'); p.textContent=`जिल्हा: ${PDF.j} • तालुका: ${PDF.t}${PDF.v?' • गाव: '+PDF.v:''} • एकूण मजूर: ${list.length} • दिनांक: ${today}${PDF.nomob?' • (मोबाईल नसलेले)':''}`; sec.appendChild(p);
+    const tb=document.createElement('table'), th=document.createElement('thead'), hr=document.createElement('tr');
+    ['अ.क्र.','नाव','अर्जदार क्र.','जॉबकार्ड क्रमांक','मोबाईल क्रमांक'].forEach(x=>{ const c=document.createElement('th'); c.textContent=x; hr.appendChild(c); });
+    th.appendChild(hr); tb.appendChild(th);
+    const body=document.createElement('tbody');
+    list.forEach((r,k)=>{ const tr=document.createElement('tr');
+      const c0=document.createElement('td'); c0.textContent=String(k+1); tr.appendChild(c0);
+      const nm=document.createElement('td'); nm.textContent=r[5]||r[6]; if(r[5]&&r[6]){ const sm=document.createElement('small'); sm.textContent=r[6]; nm.appendChild(sm); } tr.appendChild(nm);
+      [r[4],r[3],r[7]].forEach(x=>{ const c=document.createElement('td'); c.textContent=x; tr.appendChild(c); });
+      body.appendChild(tr); });
+    tb.appendChild(body); sec.appendChild(tb); pv.appendChild(sec);
+  });
+  document.title=`${PDF.t}${PDF.gp?'_'+PDF.gp:''}_मजूर_यादी${parts.length>1?'_भाग'+(i+1):''}`;
+  M.textContent=`${parts.length>1?'भाग '+(i+1)+'/'+parts.length+': ':''}${total} मजूर, ${parts[i].length} ग्रामपंचायत – प्रिंट विंडो उघडेल: "Save as PDF" निवडा${parts.length>1?'. झाल्यावर "पुढचा भाग बनवा" दाबा.':''}`;
+  document.body.classList.add('printing'); setTimeout(()=>window.print(),350);
+}
+$('pdfn').onclick=()=>printPart(PDF.idx+1);
 $('pdfb').onclick=async()=>{
   const j=$('mj').value.trim(), t=$('mt').value.trim(), gRaw=$('mg').value.trim(), v=$('mv').value.trim().toLowerCase();
   const gm=gRaw?findGP(j,t,gRaw):null, M=$('pdfm');
   if(!j||!t){ M.textContent='जिल्हा व तालुका निवडा'; return; }
   if(gRaw && !gm){ M.textContent='ग्रामपंचायत यादीतून निवडा (किंवा पूर्ण तालुक्यासाठी रिकामी ठेवा)'; return; }
-  M.textContent='यादी आणत आहे…'; $('pdfb').disabled=true;
+  M.textContent='यादी आणत आहे… (पूर्ण तालुका असेल तर १०-३० सेकंद लागू शकतात)'; $('pdfb').disabled=true; $('pdfn').classList.add('hide'); PDF=null;
   try{
     const x=await post({action:'workers',jilha:j,taluka:t,gp:gm?gm.e:''});
     if(!x.ok){ M.textContent='त्रुटी: '+(x.error||''); return; }
-    let rows=x.rows.filter(r=>(!v||r[2].toLowerCase()===v) && (!$('pm').checked||!r[7]));
+    const rows=x.rows.filter(r=>(!v||r[2].toLowerCase()===v) && (!$('pm').checked||!r[7]));
     if(!rows.length){ M.textContent='यासाठी मजूर सापडले नाहीत'; return; }
     const by=new Map(); rows.forEach(r=>{ if(!by.has(r[0])) by.set(r[0],[]); by.get(r[0]).push(r); });
-    const num={numeric:true};
     const groups=[...by.entries()].sort((a,b)=>(a[1][0][1]||a[0]).localeCompare(b[1][0][1]||b[0],'mr'));
-    const pv=$('pv'); pv.innerHTML=''; const today=new Date().toLocaleDateString('mr-IN');
-    groups.forEach(([ge,list])=>{
-      list.sort((a,b)=>a[2].localeCompare(b[2],'mr')||a[3].localeCompare(b[3],undefined,num)||a[4].localeCompare(b[4],undefined,num));
-      const sec=document.createElement('section'); sec.className='pg';
-      const h=document.createElement('h2'); h.textContent='ग्रामपंचायत: '+(list[0][1]||ge)+' ('+ge+')'; sec.appendChild(h);
-      const p=document.createElement('p'); p.textContent=`जिल्हा: ${j} • तालुका: ${t}${v?' • गाव: '+$('mv').value.trim():''} • एकूण मजूर: ${list.length} • दिनांक: ${today}${$('pm').checked?' • (मोबाईल नसलेले)':''}`; sec.appendChild(p);
-      const tb=document.createElement('table'), th=document.createElement('thead'), hr=document.createElement('tr');
-      ['अ.क्र.','नाव','अर्जदार क्र.','जॉबकार्ड क्रमांक','मोबाईल क्रमांक'].forEach(x=>{ const c=document.createElement('th'); c.textContent=x; hr.appendChild(c); });
-      th.appendChild(hr); tb.appendChild(th);
-      const body=document.createElement('tbody');
-      list.forEach((r,i)=>{ const tr=document.createElement('tr');
-        const nm=document.createElement('td'); nm.textContent=r[5]||r[6]; if(r[5]&&r[6]){ const sm=document.createElement('small'); sm.textContent=r[6]; nm.appendChild(sm); }
-        [String(i+1)].forEach(x=>{ const c=document.createElement('td'); c.textContent=x; tr.appendChild(c); });
-        tr.appendChild(nm);
-        [r[4],r[3],r[7]].forEach(x=>{ const c=document.createElement('td'); c.textContent=x; tr.appendChild(c); });
-        body.appendChild(tr); });
-      tb.appendChild(body); sec.appendChild(tb); pv.appendChild(sec);
-    });
-    document.title=`${t}${gm?'_'+gm.e:''}_मजूर_यादी`;
-    M.textContent=`${rows.length} मजूर, ${groups.length} ग्रामपंचायत – प्रिंट विंडो उघडेल: "Save as PDF" निवडा`;
-    document.body.classList.add('printing'); setTimeout(()=>window.print(),350);
+    const parts=[]; let cur=[], n=0;
+    groups.forEach(g=>{ if(cur.length && n+g[1].length>12000){ parts.push(cur); cur=[]; n=0; } cur.push(g); n+=g[1].length; });
+    if(cur.length) parts.push(cur);
+    PDF={parts,j,t,gp:gm?gm.e:'',v:$('mv').value.trim(),nomob:$('pm').checked,idx:0};
+    printPart(0);
   }catch(e){ if(e.message!=='auth') M.textContent='इंटरनेट/URL तपासा'; }
   finally{ $('pdfb').disabled=false; }
 };
