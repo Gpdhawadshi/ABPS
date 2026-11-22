@@ -115,6 +115,8 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
  #pv th,#pv td{border:1px solid #444;padding:3px 6px;text-align:left;vertical-align:top}
  #pv th{background:#e9e9e9!important}
  #pv small{display:block;font-size:9pt;color:#333!important}
+ #pv table.my{font-size:9.5pt}
+ #pv .sg{margin-top:28px;font-size:10pt}
 }
 .hide{display:none}
 </style>
@@ -237,6 +239,19 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 <button class="btn b3" id="xb" type="button">Account (Bank) फाइल डाउनलोड करा</button>
 <div id="xm" class="hint"></div>
 </fieldset>
+<fieldset><legend>📊 झालेल्या कामाचे अहवाल (Excel) – फक्त Admin</legend>
+<div class="g">
+ <div><label for="rfrom">पासून (दिनांक) – ऐच्छिक</label><input id="rfrom" type="date"></div>
+ <div><label for="rto">पर्यंत (दिनांक) – ऐच्छिक</label><input id="rto" type="date"></div>
+</div>
+<p class="hint">दिनांक रिकामे = आतापर्यंतचे सर्व काम. प्रत्येक बटणाने वेगळी Excel फाइल डाउनलोड होते.</p>
+<button class="btn" type="button" data-rep="summary">१) कर्मचारीवार सारांश (कोणी किती काम केले)</button>
+<button class="btn b3" type="button" data-rep="area">२) गावनिहाय काम (ग्रामपंचायत / गाव / कर्मचारी)</button>
+<button class="btn" type="button" data-rep="daily" style="margin-top:8px">३) दिवसवार काम</button>
+<button class="btn b3" type="button" data-rep="log">४) सर्व कामांचा तपशील (Log)</button>
+<button class="btn" type="button" data-rep="per" style="margin-top:8px">५) प्रत्येक कर्मचाऱ्याच्या नोंदी (वेगळ्या शीट)</button>
+<div id="rm" class="hint"></div>
+</fieldset>
 </section>
 
 <section id="p3" class="hide">
@@ -247,6 +262,13 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 </div>
 <button class="btn" id="ls" type="button" style="margin-top:8px">शोधा</button>
 <div id="lm" class="hint"></div>
+</fieldset>
+<fieldset id="mpf"><legend>📄 माझ्या कामाची PDF (गावनिहाय)</legend>
+<label for="pvl">गाव निवडा (तुम्ही नोंद केलेल्या गावांतूनच)</label>
+<select id="pvl"><option value="">आधी "गावे आणा" दाबा</option></select>
+<div class="hint" id="pvh"></div>
+<button class="btn b3" id="pvb" type="button">PDF बनवा</button>
+<div class="hint" id="pvm">निवडलेल्या गावात ज्या नोंदी <span id="pvwho">तुम्ही</span> केल्या त्याच PDF मध्ये येतात – नाव, जॉबकार्ड, अर्जदार क्र., आधार (शेवटचे ४ अंक), मोबाईल, बँक. प्रिंट विंडो उघडल्यावर "Save as PDF" निवडा.</div>
 </fieldset>
 <div id="ll"></div>
 </section>
@@ -561,10 +583,88 @@ function tab(n){
   document.body.dataset.tab=n;
   [1,2,3,4].forEach(i=>{ $('n'+i).classList.toggle('on',i===n); $('p'+i).classList.toggle('hide',i!==n); });
   $('tc').content=getComputedStyle(document.body).getPropertyValue('--ac').trim()||'#1d6b3b';
-  if(n===3 && ME) loadEntries();
+  if(n===3 && ME){ loadEntries(); loadMyVillages(); }
   if(n===4 && ME) mobInit();
 }
 $('n1').onclick=()=>tab(1); $('n2').onclick=()=>tab(2); $('n3').onclick=()=>tab(3); $('n4').onclick=()=>tab(4);
+
+// ===== माझी PDF (गावनिहाय) – दुरुस्ती टॅब =====
+async function loadMyVillages(){
+  const sel=$('pvl'), cur=sel.value; $('pvh').textContent='गावे आणत आहे…';
+  $('pvwho').textContent = ME.role==='admin' ? ($('lb').value ? 'निवडलेल्या कर्मचाऱ्याने' : 'सर्व कर्मचाऱ्यांनी') : 'तुम्ही';
+  try{
+    const x=await post({action:'myvillages',by:$('lb').value});
+    if(!x.ok){ $('pvh').textContent='त्रुटी: '+(x.error||''); return; }
+    sel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.textContent=x.villages.length?'गाव निवडा':'अजून नोंदी नाहीत'; sel.appendChild(o0);
+    x.villages.forEach((v,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=`${v.village} (${v.n} नोंदी) – ${v.gpE}`; o.dataset.v=v.village; o.dataset.g=v.gpE; sel.appendChild(o); });
+    if(cur) for(const o of sel.options) if(o.value===cur) sel.value=cur;
+    $('pvh').textContent=x.villages.length?`${x.villages.length} गावांत नोंदी आहेत`:'';
+  }catch(e){ if(e.message!=='auth') $('pvh').textContent='इंटरनेट/URL तपासा'; }
+}
+$('lb').addEventListener('change',()=>{ loadMyVillages(); });
+function printMine(r,vname){
+  PDF=null; const pv=$('pv'), num={numeric:true}; pv.innerHTML='';
+  const list=r.entries.slice().sort((a,b)=>a.family.localeCompare(b.family,undefined,num)||a.applicant.localeCompare(b.applicant,undefined,num));
+  const today=new Date().toLocaleDateString('mr-IN'), f=list[0];
+  const sec=document.createElement('section'); sec.className='pg';
+  const h=document.createElement('h2'); h.textContent='माझ्या नोंदींची यादी – गाव: '+vname; sec.appendChild(h);
+  const p=document.createElement('p');
+  p.textContent=`कर्मचारी: ${r.userName}${r.role==='admin'?' (Admin)':''} • ग्रामपंचायत: ${f.gpM||f.gpE} • तालुका: ${f.taluka} • जिल्हा: ${f.jilha} • एकूण नोंदी: ${list.length} • दिनांक: ${today}`;
+  sec.appendChild(p);
+  const tb=document.createElement('table'), th=document.createElement('thead'), hr=document.createElement('tr'); tb.className='my';
+  ['अ.क्र.','नाव','जॉबकार्ड / Family ID','अर्जदार क्र.','आधार','मोबाईल','बँक / खाते'].forEach(x=>{ const c=document.createElement('th'); c.textContent=x; hr.appendChild(c); });
+  th.appendChild(hr); tb.appendChild(th);
+  const body=document.createElement('tbody');
+  list.forEach((e,k)=>{ const tr=document.createElement('tr');
+    [String(k+1), e.name, e.jobcard||e.family, e.applicant, mask(e.aadhaar), e.mobile||'—', (e.bank||'—')+(e.account?' / XXXX'+e.account.slice(-4):'')]
+      .forEach(x=>{ const c=document.createElement('td'); c.textContent=x; tr.appendChild(c); });
+    body.appendChild(tr); });
+  tb.appendChild(body); sec.appendChild(tb);
+  if(r.role==='admin' && list.some(e=>e.byName)){ /* Admin: नोंद करणारा शेवटी */ const by=[...new Set(list.map(e=>e.byName).filter(Boolean))].join(', '); const q=document.createElement('p'); q.className='sg'; q.textContent='नोंद करणारे: '+by; sec.appendChild(q); }
+  pv.appendChild(sec);
+  document.title=`${r.userName}_${vname}_माझ्या_नोंदी`;
+  document.body.classList.add('printing'); setTimeout(()=>window.print(),350);
+}
+$('pvb').onclick=async()=>{
+  const o=$('pvl').selectedOptions[0];
+  if(!o || !o.dataset.v){ $('pvm').textContent='आधी गाव निवडा'; return; }
+  $('pvb').disabled=true; $('pvm').textContent='यादी आणत आहे…';
+  try{
+    const x=await post({action:'mypdf',village:o.dataset.v,gpE:o.dataset.g,by:$('lb').value});
+    if(!x.ok){ $('pvm').textContent='त्रुटी: '+(x.error||''); }
+    else if(!x.entries.length){ $('pvm').textContent='या गावात नोंदी सापडल्या नाहीत'; }
+    else { $('pvm').textContent=`${x.entries.length} नोंदी – प्रिंट विंडो उघडेल: "Save as PDF" निवडा`; printMine(x,o.dataset.v); }
+  }catch(e){ if(e.message!=='auth') $('pvm').textContent='इंटरनेट/URL तपासा'; }
+  $('pvb').disabled=false;
+};
+
+// ===== Admin: कामाचे अहवाल (वेगवेगळ्या Excel फाइल) =====
+const REPN={summary:'कर्मचारीवार_सारांश',area:'गावनिहाय_काम',daily:'दिवसवार_काम',log:'सर्व_कामांचा_तपशील',per:'कर्मचारी_नोंदी'};
+const shName = (n,used) => { let b=String(n).replace(/[\\/?*\[\]:]/g,'_').slice(0,28)||'Sheet', x=b, i=2; while(used.has(x)) x=b.slice(0,26)+'_'+(i++); used.add(x); return x; };
+async function report(kind,btn){
+  const from=$('rfrom').value, to=$('rto').value;
+  if(from && to && from>to){ $('rm').textContent='"पासून" दिनांक "पर्यंत" पेक्षा मोठा आहे'; return; }
+  $('rm').textContent='अहवाल बनवत आहे…'; btn.disabled=true;
+  try{
+    const r=await post({action:'report',from,to});
+    if(!r.ok){ $('rm').textContent='फक्त Admin ला हा अहवाल मिळतो'; return; }
+    const wb=XLSX.utils.book_new();
+    if(kind==='per'){
+      const names=Object.keys(r.per);
+      if(!names.length){ $('rm').textContent='अजून नोंदी नाहीत'; return; }
+      const used=new Set(); names.forEach(n=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r.per[n]),shName(n,used)));
+    } else {
+      const rows=r[kind];
+      if(rows.length<2){ $('rm').textContent='या कालावधीत काम सापडले नाही'; return; }
+      const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=rows[0].map((_,i)=>({wch:Math.min(34,Math.max(10,...rows.slice(0,200).map(x=>String(x[i]==null?'':x[i]).length)))}));
+      XLSX.utils.book_append_sheet(wb,ws,REPN[kind].slice(0,31));
+    }
+    const nm='ABPS_'+REPN[kind]+((from||to)?'_'+(from||'')+'_'+(to||''):'')+'.xlsx';
+    XLSX.writeFile(wb,nm); $('rm').textContent='✔ डाउनलोड झाली: '+nm;
+  }catch(e){ if(e.message!=='auth') $('rm').textContent='अहवाल अयशस्वी – इंटरनेट/URL तपासा'; }
+  finally{ btn.disabled=false; }
+}
+document.querySelectorAll('[data-rep]').forEach(b=>b.addEventListener('click',()=>report(b.dataset.rep,b)));
 
 // ===== Excel (Admin) =====
 function xVillages(){
