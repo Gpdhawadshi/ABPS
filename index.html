@@ -244,6 +244,8 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 <button class="btn" id="xa" type="button">Aadhaar फाइल डाउनलोड करा</button>
 <button class="btn b3" id="xb" type="button">Account (Bank) फाइल डाउनलोड करा</button>
 <div id="xm" class="hint"></div>
+<button class="btn" id="xdg" type="button" style="margin-top:10px;background:var(--c4);color:var(--on)">🔍 डेटा कुठे आहे ते तपासा</button>
+<pre id="xd" class="hint" style="white-space:pre-wrap;font-family:inherit;margin:6px 0 0"></pre>
 </fieldset>
 <fieldset><legend>📊 झालेल्या कामाचे अहवाल (Excel) – फक्त Admin</legend>
 <div class="g">
@@ -329,7 +331,7 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 
 <script>
 // ===== येथे Apps Script Web App ची URL टाका =====
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIhK2Df25uc_OkOFXGwQrz4M7HjJq4Z5w-qpYlgwGubgePJNleDQYcPqHcRMarlBfj7g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/library/d/15xuR8tNg6JFGrRKNr3Og56kgp50fnFb3DzEXvc1lyhjg2wiP8WPucQGA/14';
 // ===============================================
 const $ = id => document.getElementById(id);
 let GP = [], BK = [], saved = 0, ME = null, EDIT = null, PICK = null, RW = [];
@@ -783,23 +785,47 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
+const SRV_VER='2026-11-22-b';
+function srvNote(r){
+  let t='';
+  if(!r.ver) t+='⚠ जुनी Code.gs चालू आहे – नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version द्या. ';
+  else if(r.ver!==SRV_VER) t+=`(सर्व्हर आवृत्ती ${r.ver}, ॲपला ${SRV_VER} हवी) `;
+  if(r.migrated){ const m=Object.entries(r.migrated).map(([k,v])=>`${k}: ${v.added} जोडल्या`).join(', '); t+=`✔ मास्टर फाइलमधील जुन्या टॅबच्या नोंदी डेटा फाइलमध्ये एकत्र केल्या (${m}). `; }
+  return t;
+}
 async function dl(kind){
   const j=$('xj').value.trim(), t=$('xt').value.trim(), g=$('xg').value.trim(), v=$('xv').value;
   $('xm').textContent='डेटा आणत आहे…';
   try{
     const r=await post({action:'export',jilha:j,taluka:t,gp:g,village:v});
     if(!r.ok){ $('xm').textContent='फक्त Admin ला डाउनलोड करता येते'; return; }
-    const rows=r[kind], total=kind==='a'?r.totalA:r.totalB, n=rows.length-1;
+    const rows=r[kind], total=kind==='a'?r.totalA:r.totalB, n=rows.length-1, pre=srvNote(r);
     let warn='';
-    if(r.unknown && r.unknown.length && kind==='a') warn=` ⚠ ${r.unknown.reduce((s,x)=>s+x.n,0)} नोंदींची ग्रामपंचायत नावे GP_List शी जुळत नाहीत: `+r.unknown.map(x=>`${x.gp} (${x.n})`).join(', ')+' – त्या घेण्यासाठी जिल्हा, तालुका, ग्रामपंचायत व गाव रिकामे ठेवा.';
+    if(r.unknown && r.unknown.length && kind==='a') warn=` ⚠ ${r.unknown.reduce((s,x)=>s+x.n,0)} नोंदींची ग्रामपंचायत नावे GP_List शी जुळत नाहीत (त्याही यात जोडल्या आहेत): `+r.unknown.map(x=>`${x.gp} (${x.n})`).join(', ')+'.';
     else if(n<total) warn=` (शीटमध्ये एकूण ${total} आहेत; बाकी तुमच्या निवडीबाहेर – सर्व हवे असतील तर निवड रिकामी ठेवा)`;
-    if(rows.length<2){ $('xm').textContent='या निवडीसाठी नोंदी नाहीत. शीटमध्ये एकूण '+total+' नोंदी आहेत.'+warn; return; }
+    if(rows.length<2){ $('xm').textContent=pre+'या निवडीसाठी नोंदी नाहीत. शीटमध्ये एकूण '+total+' नोंदी आहेत.'+warn; return; }
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),kind==='a'?'Aadhaar Data':'Bank Data');
     const nm=(v||g||t||j||'सर्व').replace(/[\\/:*?"<>|]/g,'_')+(kind==='a'?'_Aadhaar.xlsx':'_Account.xlsx');
-    XLSX.writeFile(wb,nm); $('xm').textContent=`${n} नोंदी डाउनलोड झाल्या (शीटमध्ये एकूण ${total}): ${nm}.`+warn;
+    XLSX.writeFile(wb,nm); $('xm').textContent=pre+`${n} नोंदी डाउनलोड झाल्या (शीटमध्ये एकूण ${total}): ${nm}.`+warn;
   }catch(e){ if(e.message!=='auth') $('xm').textContent='डाउनलोड अयशस्वी – इंटरनेट/URL तपासा'; }
 }
+$('xdg').onclick=async()=>{
+  const box=$('xd'); box.textContent='तपासत आहे…';
+  try{
+    const r=await post({action:'diag'});
+    if(!r.ok){ box.textContent='फक्त Admin ला हे दिसते (किंवा जुनी Code.gs चालू आहे – नवीन Deploy करा)'; return; }
+    const L=[`सर्व्हर आवृत्ती: ${r.ver}`+(r.ver!==SRV_VER?'  ⚠ ॲपशी जुळत नाही – नवीन Code.gs Deploy करा':'  ✔')];
+    L.push('ॲप ही डेटा फाइल वाचते: '+r.dataFile.name); L.push(r.dataFile.url);
+    L.push(`Aadhaar Data: ${r.data.aadhaar} • Bank Data: ${r.data.bank} • Mobile Data: ${r.data.mobile} • Log: ${r.data.log}`);
+    L.push(`Aadhaar नोंदी: ${r.entries} (जिल्हा/तालुका नोंद असलेल्या: ${r.withHelper}; नोंद करणारा नसलेल्या: ${r.noOwner})`);
+    if(r.same) L.push('⚠ डेटा फाइल व मास्टर फाइल एकच आहेत.');
+    const lg=Object.entries(r.legacy||{}); if(lg.length) L.push('⚠ मास्टर फाइलमधील जुन्या टॅबमध्ये अजून नोंदी आहेत: '+lg.map(([k,v])=>k+' '+v).join(', ')+' – Excel डाउनलोड केल्यावर किंवा पुन्हा लॉगिन केल्यावर त्या आपोआप एकत्र होतात.');
+    if(r.oldTabs&&r.oldTabs.length) L.push('मास्टर फाइलमधील जुने (एकत्र केलेले) टॅब: '+r.oldTabs.join(', '));
+    L.push(`ग्रामपंचायत नावे (${r.gpCount}): `+r.gps.map(x=>`${x.gp} ${x.n}`).join(', '));
+    box.textContent=L.join('\n');
+  }catch(e){ if(e.message!=='auth') box.textContent='इंटरनेट/URL तपासा'; }
+};
 $('xa').onclick=()=>dl('a'); $('xb').onclick=()=>dl('b');
 
 // ===== मजूर यादी (Workers शीट) – एकदा आणून साठवतो =====
