@@ -142,6 +142,13 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
   <button class="btn b3" id="showReg" type="button">पहिल्यांदा वापरताय? नवीन खाते बनवा</button>
  </fieldset>
  </form>
+<details id="sud" style="margin:0 0 12px">
+ <summary style="cursor:pointer;font-weight:700">⚙ सर्व्हर URL (Apps Script Web App)</summary>
+ <div class="hint" style="margin:6px 0">Apps Script → Deploy → Manage deployments मधील "Web app URL" (https://script.google.com/macros/s/…/exec) येथे टाका. एकदा टाकली की ती या फोनमध्ये साठवली जाते.</div>
+ <input id="su" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="none">
+ <button class="btn b3" id="sus" type="button" style="margin-top:6px">URL जतन करा</button>
+ <div class="err" id="serr"></div>
+</details>
 <form id="rf" autocomplete="off" class="hide">
  <fieldset><legend>नवीन खाते बनवा</legend>
   <div class="g">
@@ -331,7 +338,10 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 
 <script>
 // ===== येथे Apps Script Web App ची URL टाका =====
-const SCRIPT_URL = 'https://script.google.com/macros/library/d/15xuR8tNg6JFGrRKNr3Og56kgp50fnFb3DzEXvc1lyhjg2wiP8WPucQGA/14';
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIhK2Df25uc_OkOFXGwQrz4M7HjJq4Z5w-qpYlgwGubgePJNleDQYcPqHcRMarlBfj7g/exec';
+// फाइलमध्ये URL न टाकता लॉगिन पानावरील "⚙ सर्व्हर URL" मध्ये एकदा टाकली तर ती फोनमध्ये साठवली जाते – पुढच्या प्रत्येक नवीन index.html मध्ये पुन्हा टाकावी लागत नाही
+try{ const su=localStorage.getItem('scriptUrl'); if(su) SCRIPT_URL=su; }catch(e){}
+const urlMissing = () => !SCRIPT_URL || SCRIPT_URL.indexOf('PASTE')===0;
 // ===============================================
 const $ = id => document.getElementById(id);
 let GP = [], BK = [], saved = 0, ME = null, EDIT = null, PICK = null, RW = [];
@@ -344,9 +354,20 @@ function show(t,c){ const el=$('toast'); el.textContent=t; el.className=c; clear
 $('toast').onclick=()=>$('toast').className='';
 
 // ===== सर्व्हरशी संवाद (प्रत्येक विनंतीत लॉगिन) =====
+// "इंटरनेट/URL तपासा" चे खरे कारण एका स्पष्ट संदेशात दाखवतो
+function explainNet(e){
+  let t;
+  if(urlMissing()) t='सर्व्हर URL सेट नाही – लॉगिन पानावरील "⚙ सर्व्हर URL" मध्ये Apps Script Web App ची URL टाका';
+  else if(e && e.name==='SyntaxError') t='सर्व्हरकडून चुकीचे उत्तर आले – (१) URL चुकीची/जुनी असू शकते, (२) Apps Script Deploy मध्ये "Who has access" = Anyone असावे, (३) नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version केले का ते पाहा';
+  else t='सर्व्हरशी संपर्क होत नाही – फोनचे इंटरनेट तपासा आणि URL बरोबर आहे का ते पाहा';
+  show('✖ '+t,'no');
+}
 async function post(obj){
-  const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...obj,u:ME&&ME.u,p:ME&&ME.p})});
-  const x = await r.json();
+  let x;
+  try{
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...obj,u:ME&&ME.u,p:ME&&ME.p})});
+    x = await r.json();
+  }catch(e){ explainNet(e); throw e; }
   if(x.error==='auth'||x.error==='locked'){ logout(true); throw new Error('auth'); }
   return x;
 }
@@ -372,7 +393,7 @@ $('rf').addEventListener('submit',async ev=>{
     const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,code})})).json();
     if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[]}; ls('me',ME); ['rn','ru','rp','rp2','rc'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
     else E({exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',code:'नोंदणी कोड चुकीचा आहे',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
-  }catch(e){ E('इंटरनेट/URL तपासा'); }
+  }catch(e){ E('इंटरनेट/URL तपासा'); explainNet(e); }
   $('rb1').disabled=false;
 });
 function logout(forced){ localStorage.removeItem('me'); ME=null; EDIT=null; showLogin(forced?'लॉगिन अवैध झाले – पुन्हा लॉगिन करा':''); }
@@ -388,13 +409,13 @@ $('lf').addEventListener('submit',async ev=>{
     const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'login',u,p})})).json();
     if(x.ok){ ME={u:x.u,p,name:x.name,role:x.role,users:x.users||[]}; if($('lr').checked) ls('me',ME); else localStorage.removeItem('me'); $('lp').value=''; startApp(); }
     else $('lerr').textContent=x.error==='locked'?'खूप चुकीचे प्रयत्न – १० मिनिटांनी पुन्हा करा':'नाव किंवा PIN चुकीचा';
-  }catch(e){ $('lerr').textContent='इंटरनेट/URL तपासा'; }
+  }catch(e){ $('lerr').textContent='इंटरनेट/URL तपासा'; explainNet(e); }
   $('lb1').disabled=false;
 });
 
 async function loadInit(){
-  try{ const r = await (await fetch(SCRIPT_URL)).json(); GP=r.gp; BK=r.banks; ls('init',r); }
-  catch(e){ const r=ls('init')||{gp:[],banks:[]}; GP=r.gp; BK=r.banks; }
+  try{ const r = await (await fetch(SCRIPT_URL)).json(); if(!Array.isArray(r.gp)) throw new Error('bad'); GP=r.gp; BK=r.banks||[]; ls('init',r); }
+  catch(e){ const r=ls('init')||{gp:[],banks:[]}; GP=r.gp||[]; BK=r.banks||[]; }
   fill($('dj'), uniq(GP.map(x=>x.j)).map(x=>[x]));
 }
 const talukas = j => uniq(GP.filter(x=>x.j===j).map(x=>x.t));
@@ -1040,11 +1061,20 @@ $('instBtn').onclick=async()=>{
 };
 $('instX').onclick=()=>{ sessionStorage.setItem('instX','1'); $('inst').classList.remove('show'); };
 
+// ===== सर्व्हर URL जतन =====
+$('su').value=urlMissing()?'':SCRIPT_URL;
+$('sus').onclick=()=>{
+  const u=$('su').value.trim();
+  if(!/^https:\/\/script\.google\.com\/(a\/[^\/]+\/)?macros\/s\/[\w-]+\/exec$/.test(u)){ $('serr').textContent='ही URL चुकीची दिसते – ती https://script.google.com/macros/s/…/exec अशी असावी'; return; }
+  try{ localStorage.setItem('scriptUrl',u); }catch(e){}
+  SCRIPT_URL=u; $('serr').textContent=''; show('✔ सर्व्हर URL जतन झाली – आता लॉगिन करा','ok'); loadInit();
+};
+
 // ===== सुरुवात =====
 ME=ls('me');
 if(ME){ startApp();
   post({action:'login'}).then(x=>{ if(x.ok){ ME.name=x.name; ME.role=x.role; ME.users=x.users||[]; ls('me',ME); setWho(); } }).catch(()=>{});
-} else showLogin();
+} else { showLogin(); if(urlMissing()){ $('lerr').textContent='सर्व्हर URL सेट नाही – खाली "⚙ सर्व्हर URL" उघडून टाका'; $('sud').open=true; } }
 </script>
 </body>
 </html>
