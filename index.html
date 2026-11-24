@@ -414,10 +414,16 @@ $('lf').addEventListener('submit',async ev=>{
 });
 
 async function loadInit(){
-  try{ const r = await (await fetch(SCRIPT_URL)).json(); if(!Array.isArray(r.gp)) throw new Error('bad'); GP=r.gp; BK=r.banks||[]; ls('init',r); }
+  // नेहमी सर्व्हरवरून ताजी यादी (cache नाही) – शीटमध्ये केलेला बदल सर्व users ना लगेच दिसतो; ऑफलाइन असेल तरच जुनी यादी
+  try{ const r = await (await fetch(SCRIPT_URL+(SCRIPT_URL.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store'})).json(); if(!Array.isArray(r.gp)) throw new Error('bad'); GP=r.gp; BK=r.banks||[]; ls('init',r); }
   catch(e){ const r=ls('init')||{gp:[],banks:[]}; GP=r.gp||[]; BK=r.banks||[]; }
   fill($('dj'), uniq(GP.map(x=>x.j)).map(x=>[x]));
+  const jj=$('j')&&$('j').value.trim(); if(jj) fill($('dt'), talukas(jj).map(x=>[x]));
 }
+// ॲप चालू असताना/पुन्हा उघडल्यावर यादी आपोआप ताजी करा
+let _lastInit=Date.now();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && ME && Date.now()-_lastInit>30000){ _lastInit=Date.now(); loadInit(); } });
+setInterval(()=>{ if(!document.hidden && ME){ _lastInit=Date.now(); loadInit(); } }, 300000);
 const talukas = j => uniq(GP.filter(x=>x.j===j).map(x=>x.t));
 const gpsOf = (j,t) => { const s=new Map(); GP.filter(x=>x.j===j&&x.t===t).forEach(x=>s.set(x.e,x.m)); return [...s]; };
 const findGP = (j,t,raw) => GP.find(x=>x.j===j&&x.t===t&&(x.e.toLowerCase()===raw.toLowerCase()||x.m===raw));
@@ -806,7 +812,7 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
-const SRV_VER='2026-11-22-b';
+const SRV_VER='2026-11-24-a';
 function srvNote(r){
   let t='';
   if(!r.ver) t+='⚠ जुनी Code.gs चालू आहे – नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version द्या. ';
