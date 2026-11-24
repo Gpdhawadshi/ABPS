@@ -16,7 +16,6 @@
  --c1:#1d6b3b;--c2:#1b5fa8;--c3:#b85c00;--c4:#7a3fb0;--c5:#0e7c86;--ac:var(--c1)}
 @media (prefers-color-scheme:dark){:root{--bg:#111812;--card:#1a241c;--tx:#e9efe9;--mu:#9aab9d;--bd:#33443a;--er:#ff8a80;--on:#0a1a10;
  --c1:#62c487;--c2:#73b4f4;--c3:#f0a050;--c4:#c9a0f2;--c5:#5fd0da}}
-body[data-tab="5"]{--ac:var(--c3)}
 body[data-tab="2"]{--ac:var(--c2)}
 body[data-tab="3"]{--ac:var(--c4)}
 body[data-tab="4"]{--ac:var(--c5)}
@@ -31,13 +30,11 @@ header .t{flex:1}
 #who button{margin-top:3px;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:3px 10px;font:inherit;cursor:pointer}
 main{max-width:720px;margin:0 auto;padding:12px}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-nav button{flex:1 1 18%;min-width:74px;padding:10px 4px;border:2px solid;background:var(--card);border-radius:10px;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer}
+nav button{flex:1 1 22%;min-width:74px;padding:10px 4px;border:2px solid;background:var(--card);border-radius:10px;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer}
 #n1{color:var(--c1);border-color:var(--c1)}
 #n2{color:var(--c2);border-color:var(--c2)}
 #n3{color:var(--c4);border-color:var(--c4)}
 #n4{color:var(--c5);border-color:var(--c5)}
-#n5{color:var(--c3);border-color:var(--c3)}
-#n5.on{background:var(--c3);color:#fff}
 #n1.on{background:var(--c1);color:var(--on)}
 #n2.on{background:var(--c2);color:var(--on)}
 #n3.on{background:var(--c4);color:var(--on)}
@@ -86,7 +83,7 @@ th{background:var(--bg)}
 #inst .x{background:transparent;color:#fff;padding:6px 8px;font-size:1.2rem}
 #pl{display:none}
 body.guest #pl{display:block}
-body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.guest #inst,body.guest #who{display:none!important}
+body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.guest #inst,body.guest #who{display:none!important}
 #eb{display:none;margin-bottom:12px;padding:10px 12px;border-radius:10px;background:var(--c4);color:var(--on);gap:10px;align-items:center}
 #eb.show{display:flex}
 #eb div{flex:1;font-size:.92rem}
@@ -122,8 +119,6 @@ body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.
  #pv h3{margin:14px 0 4px;font-size:12pt}
  #pv .sg{margin-top:28px;font-size:10pt}
 }
-@keyframes blinkc{0%{color:var(--c1);opacity:1}25%{color:var(--c2);opacity:.4}50%{color:var(--c3);opacity:1}75%{color:var(--c4);opacity:.4}100%{color:var(--c1);opacity:1}}
-.blink{animation:blinkc 1.3s linear infinite;font-weight:700}
 .hide{display:none}
 </style>
 </head>
@@ -147,13 +142,17 @@ body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.
   <button class="btn b3" id="showReg" type="button">पहिल्यांदा वापरताय? नवीन खाते बनवा</button>
  </fieldset>
  </form>
+<details id="sud" style="margin:0 0 12px">
+ <summary style="cursor:pointer;font-weight:700">⚙ सर्व्हर URL (Apps Script Web App)</summary>
+ <div class="hint" style="margin:6px 0">Apps Script → Deploy → Manage deployments मधील "Web app URL" (https://script.google.com/macros/s/…/exec) येथे टाका. एकदा टाकली की ती या फोनमध्ये साठवली जाते.</div>
+ <input id="su" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="none">
+ <button class="btn b3" id="sus" type="button" style="margin-top:6px">URL जतन करा</button>
+ <div class="err" id="serr"></div>
+</details>
 <form id="rf" autocomplete="off" class="hide">
  <fieldset><legend>नवीन खाते बनवा</legend>
   <div class="g">
    <div class="w"><label for="rn">तुमचे पूर्ण नाव</label><input id="rn"></div>
-   <div><label for="rj">जिल्हा</label><input id="rj" list="dj" placeholder="शोधा / निवडा"></div>
-   <div><label for="rt">तालुका</label><input id="rt" list="drt" placeholder="शोधा / निवडा"></div>
-   <div class="w"><label for="rg">तुमची ग्रामपंचायत (English / मराठी) – तुम्ही फक्त हीच ग्रामपंचायत उघडू शकाल</label><input id="rg" list="drg" placeholder="शोधा / निवडा"></div>
    <div><label for="ru">तुमचा Username (a-z, 0-9, ., _ ; ३-२० अक्षरे)</label><input id="ru" autocapitalize="none" autocomplete="off"></div>
    <div><label for="rc">नोंदणी कोड (Admin ने दिला असेल तर)</label><input id="rc" autocomplete="off"></div>
    <div><label for="rp">PIN (४ ते ६ अंक)</label><input id="rp" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
@@ -173,25 +172,7 @@ body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.
  <button id="instBtn" type="button">इन्स्टॉल करा</button>
  <button class="x" id="instX" type="button" aria-label="बंद करा">✕</button>
 </div>
-<nav><button id="n5">गाव</button><button id="n1" class="on">नोंदणी</button><button id="n2">Excel</button><button id="n3">दुरुस्ती</button><button id="n4">मोबाईल</button></nav>
-
-<section id="p5" class="hide">
-<fieldset><legend>गाव निवडा</legend>
-<div class="g">
- <div><label for="vj">जिल्हा</label><input id="vj" list="dj" placeholder="शोधा / निवडा"></div>
- <div><label for="vt">तालुका</label><input id="vt" list="dvt" placeholder="शोधा / निवडा"></div>
- <div class="w"><label for="vg">ग्रामपंचायत (मराठी / English)</label><input id="vg" list="dvg" placeholder="शोधा / निवडा"></div>
- <div class="w"><label for="vvl">गाव</label><select id="vvl"><option value="">आधी ग्रामपंचायत निवडा</option></select></div>
-</div>
-<div class="hint" id="vi"></div>
-</fieldset>
-<fieldset id="vwf" class="hide"><legend>या गावातील मजूर</legend>
-<label for="vq">शोधा – नाव किंवा जॉबकार्डमधील / नंतरचा क्रमांक (ऐच्छिक)</label>
-<input id="vq" type="search" autocomplete="off" placeholder="टाइप करा">
-<div class="hint" id="vh"></div>
-<div id="vr" style="margin-top:8px"></div>
-</fieldset>
-</section>
+<nav><button id="n1" class="on">नोंदणी</button><button id="n2">Excel</button><button id="n3">दुरुस्ती</button><button id="n4">मोबाईल</button></nav>
 
 <section id="p1">
 <div id="eb"><div id="ebt"></div><button id="ebx" type="button">रद्द</button></div>
@@ -259,13 +240,6 @@ body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.
 </section>
 
 <section id="p2" class="hide">
-<details id="sud" style="margin:0 0 12px">
- <summary style="cursor:pointer;font-weight:700">⚙ सर्व्हर URL (Apps Script Web App)</summary>
- <div class="hint" style="margin:6px 0">Apps Script → Deploy → Manage deployments मधील "Web app URL" (https://script.google.com/macros/s/…/exec) येथे टाका. एकदा टाकली की ती या फोनमध्ये साठवली जाते.</div>
- <input id="su" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="none">
- <button class="btn b3" id="sus" type="button" style="margin-top:6px">URL जतन करा</button>
- <div class="err" id="serr"></div>
-</details>
 <fieldset><legend>Excel फाइल (फक्त Admin)</legend>
 <div class="g">
  <div><label for="xj">जिल्हा – ऐच्छिक</label><input id="xj" list="dj"></div>
@@ -334,8 +308,8 @@ body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.
 </fieldset>
 
 <fieldset><legend>📱 मी भरलेले मोबाईल नंबर</legend>
-<div class="hint" id="mmh">यादी पाहण्यासाठी खालील बटण दाबा</div>
-<button class="btn sm" id="mmb" type="button">मी भरलेले नंबर पाहा</button>
+<div class="hint" id="mmh"></div>
+<button class="btn sm" id="mmb" type="button">यादी पुन्हा आणा</button>
 <div id="mml" style="margin-top:8px"></div>
 </fieldset>
 
@@ -359,7 +333,7 @@ body.guest nav,body.guest #p5,body.guest #p1,body.guest #p2,body.guest #p3,body.
 
 <div id="pv"></div>
 <div id="toast" role="status" aria-live="polite"></div>
-<datalist id="dj"></datalist><datalist id="dvt"></datalist><datalist id="dvg"></datalist><datalist id="drt"></datalist><datalist id="drg"></datalist><datalist id="dt"></datalist><datalist id="dg"></datalist><datalist id="dv"></datalist>
+<datalist id="dj"></datalist><datalist id="dt"></datalist><datalist id="dg"></datalist><datalist id="dv"></datalist>
 <datalist id="db"></datalist><datalist id="dxt"></datalist><datalist id="dxg"></datalist><datalist id="dmt"></datalist><datalist id="dmg"></datalist><datalist id="dmv"></datalist>
 
 <script>
@@ -400,7 +374,7 @@ async function post(obj){
 
 // ===== लॉगिन =====
 function showLogin(t){ document.body.classList.add('guest'); $('lerr').textContent=t||''; $('lf').classList.remove('hide'); $('rf').classList.add('hide'); }
-$('showReg').onclick=()=>{ loadInit(); $('lf').classList.add('hide'); $('rf').classList.remove('hide'); $('rerr').textContent=''; };
+$('showReg').onclick=()=>{ $('lf').classList.add('hide'); $('rf').classList.remove('hide'); $('rerr').textContent=''; };
 $('showLog').onclick=()=>showLogin();
 $('ru').addEventListener('input',()=>{ $('ru').value=$('ru').value.toLowerCase().replace(/[^a-z0-9._]/g,'').slice(0,20); });
 $('rp').addEventListener('input',()=>{ $('rp').value=$('rp').value.replace(/\D/g,'').slice(0,6); });
@@ -409,33 +383,31 @@ const weakPin = p => /^(\d)\1+$/.test(p) || ['1234','12345','123456','4321','654
 $('rf').addEventListener('submit',async ev=>{
   ev.preventDefault(); const E=t=>{ $('rerr').textContent=t; };
   const name=$('rn').value.trim(), u=$('ru').value.trim(), p=$('rp').value, p2=$('rp2').value, code=$('rc').value.trim();
-  const rj=$('rj').value.trim(), rt=$('rt').value.trim(), rgm=findGP(rj,rt,$('rg').value.trim());
   if(name.length<3) return E('पूर्ण नाव लिहा');
-  if(!rgm) return E('जिल्हा, तालुका व ग्रामपंचायत यादीतून निवडा');
   if(!/^[a-z0-9._]{3,20}$/.test(u)) return E('Username ३ ते २० अक्षरांचे असावे (a-z, 0-9, ., _)');
   if(!/^\d{4,6}$/.test(p)) return E('PIN ४ ते ६ अंकी असावा');
   if(weakPin(p)) return E('हा PIN सोपा आहे (उदा. 1234, 1111) – दुसरा PIN निवडा');
   if(p!==p2) return E('दोन्ही PIN सारखे नाहीत');
   $('rb1').disabled=true; E('खाते बनवत आहे…');
   try{
-    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,code,jilha:rj,taluka:rt,gp:rgm.e})})).json();
-    if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[],jilha:x.jilha||'',taluka:x.taluka||'',gp:x.gp||''}; ls('me',ME); ['rn','ru','rp','rp2','rc'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
-    else E({exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',code:'नोंदणी कोड चुकीचा आहे',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',badgp:'ग्रामपंचायत यादीतील नाही – पुन्हा निवडा',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
+    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,code})})).json();
+    if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[]}; ls('me',ME); ['rn','ru','rp','rp2','rc'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
+    else E({exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',code:'नोंदणी कोड चुकीचा आहे',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
   }catch(e){ E('इंटरनेट/URL तपासा'); explainNet(e); }
   $('rb1').disabled=false;
 });
-function logout(forced){ localStorage.removeItem('me'); ME=null; EDIT=null; resetScope(); GP=(ls('init')||{gp:[]}).gp||[]; showLogin(forced?'लॉगिन अवैध झाले – पुन्हा लॉगिन करा':''); }
+function logout(forced){ localStorage.removeItem('me'); ME=null; EDIT=null; showLogin(forced?'लॉगिन अवैध झाले – पुन्हा लॉगिन करा':''); }
 $('lo').onclick=()=>logout(false);
 function setWho(){ $('wn').textContent=ME.name+(ME.role==='admin'?' (Admin)':''); $('n2').style.display=ME.role==='admin'?'':'none'; $('lbw').style.display=ME.role==='admin'?'':'none';
   $('p3t').textContent=ME.role==='admin'?'सर्व नोंदी / दुरुस्ती':'माझ्या नोंदी / दुरुस्ती'; }
-function startApp(){ document.body.classList.remove('guest'); setWho(); placeSud(); tab(5); loadInit().then(flush); qInfo(); instUI(); }
+function startApp(){ document.body.classList.remove('guest'); setWho(); tab(1); loadInit().then(flush); qInfo(); instUI(); }
 $('lf').addEventListener('submit',async ev=>{
   ev.preventDefault(); const u=$('lu').value.trim(), p=$('lp').value.trim();
   if(!u||!p){ $('lerr').textContent='नाव व PIN भरा'; return; }
   $('lb1').disabled=true; $('lerr').textContent='तपासत आहे…';
   try{
     const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'login',u,p})})).json();
-    if(x.ok){ ME={u:x.u,p,name:x.name,role:x.role,users:x.users||[],jilha:x.jilha||'',taluka:x.taluka||'',gp:x.gp||''}; if($('lr').checked) ls('me',ME); else localStorage.removeItem('me'); $('lp').value=''; startApp(); }
+    if(x.ok){ ME={u:x.u,p,name:x.name,role:x.role,users:x.users||[]}; if($('lr').checked) ls('me',ME); else localStorage.removeItem('me'); $('lp').value=''; startApp(); }
     else $('lerr').textContent=x.error==='locked'?'खूप चुकीचे प्रयत्न – १० मिनिटांनी पुन्हा करा':'नाव किंवा PIN चुकीचा';
   }catch(e){ $('lerr').textContent='इंटरनेट/URL तपासा'; explainNet(e); }
   $('lb1').disabled=false;
@@ -445,30 +417,13 @@ async function loadInit(){
   // नेहमी सर्व्हरवरून ताजी यादी (cache नाही) – शीटमध्ये केलेला बदल सर्व users ना लगेच दिसतो; ऑफलाइन असेल तरच जुनी यादी
   try{ const r = await (await fetch(SCRIPT_URL+(SCRIPT_URL.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store'})).json(); if(!Array.isArray(r.gp)) throw new Error('bad'); GP=r.gp; BK=r.banks||[]; ls('init',r); }
   catch(e){ const r=ls('init')||{gp:[],banks:[]}; GP=r.gp||[]; BK=r.banks||[]; }
-  if(restricted()) GP=GP.filter(x=>x.e.toLowerCase()===ME.gp.toLowerCase()&&(!ME.jilha||x.j.toLowerCase()===ME.jilha.toLowerCase())&&(!ME.taluka||x.t.toLowerCase()===ME.taluka.toLowerCase()));
   fill($('dj'), uniq(GP.map(x=>x.j)).map(x=>[x]));
-  applyScope();
   const jj=$('j')&&$('j').value.trim(); if(jj) fill($('dt'), talukas(jj).map(x=>[x]));
 }
 // ॲप चालू असताना/पुन्हा उघडल्यावर यादी आपोआप ताजी करा
 let _lastInit=Date.now();
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && ME && Date.now()-_lastInit>30000){ _lastInit=Date.now(); loadInit(); } });
 setInterval(()=>{ if(!document.hidden && ME){ _lastInit=Date.now(); loadInit(); } }, 300000);
-
-// ===== ग्रामपंचायत बंधन: user ला फक्त स्वतःची ग्रामपंचायत (Admin ला सर्व) =====
-const restricted = () => !!(ME && ME.role!=='admin' && ME.gp);
-const SCOPE_IDS=['j','t','g','mj','mt','mg','vj','vt','vg'];
-function resetScope(){ SCOPE_IDS.forEach(id=>{ const e=$(id); e.readOnly=false; e.value=''; }); $('gm').value=''; W=[]; wKey=''; VW=[]; vKey=''; RW=[]; PICK=null; $('vvl').innerHTML='<option value="">आधी ग्रामपंचायत निवडा</option>'; $('vwf').classList.add('hide'); }
-function applyScope(){
-  if(!ME) return;
-  const lock=restricted();
-  SCOPE_IDS.forEach(id=>{ $(id).readOnly=lock; });
-  if(!lock||!GP.length) return;
-  const m=GP[0];
-  if($('g').value!==m.e){ setVal('j',m.j); setVal('t',m.t); setVal('g',m.e); }
-  if($('mg').value!==m.e){ setVal('mj',m.j); setVal('mt',m.t); setVal('mg',m.e); }
-  if($('vg').value!==m.e){ setVal('vj',m.j); setVal('vt',m.t); setVal('vg',m.e); }
-}
 const talukas = j => uniq(GP.filter(x=>x.j===j).map(x=>x.t));
 const gpsOf = (j,t) => { const s=new Map(); GP.filter(x=>x.j===j&&x.t===t).forEach(x=>s.set(x.e,x.m)); return [...s]; };
 const findGP = (j,t,raw) => GP.find(x=>x.j===j&&x.t===t&&(x.e.toLowerCase()===raw.toLowerCase()||x.m===raw));
@@ -668,16 +623,14 @@ $('ls').onclick=loadEntries;
 $('lq').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); loadEntries(); } });
 
 // ===== टॅब (प्रत्येकाचा वेगळा रंग) =====
-let mmShown=false;
 function tab(n){
   document.body.dataset.tab=n;
-  [1,2,3,4,5].forEach(i=>{ $('n'+i).classList.toggle('on',i===n); $('p'+i).classList.toggle('hide',i!==n); });
+  [1,2,3,4].forEach(i=>{ $('n'+i).classList.toggle('on',i===n); $('p'+i).classList.toggle('hide',i!==n); });
   $('tc').content=getComputedStyle(document.body).getPropertyValue('--ac').trim()||'#1d6b3b';
   if(n===3 && ME){ loadEntries(); loadMyVillages(); }
-  if(n===4 && ME){ mobInit(); }
-  if(n===5 && ME){ applyScope(); }
+  if(n===4 && ME){ mobInit(); loadMyMob(); }
 }
-$('n5').onclick=()=>tab(5); $('n1').onclick=()=>tab(1); $('n2').onclick=()=>tab(2); $('n3').onclick=()=>tab(3); $('n4').onclick=()=>tab(4);
+$('n1').onclick=()=>tab(1); $('n2').onclick=()=>tab(2); $('n3').onclick=()=>tab(3); $('n4').onclick=()=>tab(4);
 
 // ===== माझी PDF (गावनिहाय) – दुरुस्ती टॅब =====
 async function loadMyVillages(){
@@ -835,7 +788,7 @@ $('pdb').onclick=async()=>{
 
 // ===== मोबाईल टॅब: मी भरलेले नंबर =====
 async function loadMyMob(){
-  mmShown=true; const box=$('mml'); $('mmh').textContent='आणत आहे…';
+  const box=$('mml'); $('mmh').textContent='आणत आहे…';
   try{
     const x=await post({action:'mymobiles',by:''});
     if(!x.ok){ $('mmh').textContent='त्रुटी: '+(x.error||''); return; }
@@ -859,7 +812,7 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
-const SRV_VER='2026-11-24-b';
+const SRV_VER='2026-11-24-a';
 function srvNote(r){
   let t='';
   if(!r.ver) t+='⚠ जुनी Code.gs चालू आहे – नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version द्या. ';
@@ -915,18 +868,12 @@ const skAny = w => isDev(w)?skDev(w):skLat(w);
 const toW = (r,j,t) => { const nm=(r[5]+' '+r[6]).toLowerCase().replace(ZW,''), words=nm.split(/\s+/).filter(Boolean);
   return {j,t,gpE:r[0],gpM:r[1],village:r[2],jobcard:r[3],applicant:r[4],nameM:r[5],nameE:r[6],mobile:r[7],done:!!r[8],
     fam:(r[3].split('/')[1]||'').toLowerCase(), nm, words, sk:words.map(skAny)}; };
-const WP=new Map();   // एकाच वेळी एकाच यादीसाठी अनेक विनंत्या जाऊ नयेत
 async function getWorkers(j,t,gE,force){
   const key=j+'|'+t+'|'+gE, c=WC.get(key);
   if(c && !force && Date.now()-c.t<600000) return c.rows;
-  if(WP.has(key) && !force) return WP.get(key);
-  const p=(async()=>{
-    const x=await post({action:'workers',jilha:j,taluka:t,gp:gE});
-    if(!x.ok) throw new Error(x.error||'त्रुटी');
-    const rows=x.rows.map(r=>toW(r,j,t)); WC.set(key,{t:Date.now(),rows}); return rows;
-  })();
-  WP.set(key,p);
-  try{ return await p; } finally{ WP.delete(key); }
+  const x=await post({action:'workers',jilha:j,taluka:t,gp:gE});
+  if(!x.ok) throw new Error(x.error||'त्रुटी');
+  const rows=x.rows.map(r=>toW(r,j,t)); WC.set(key,{t:Date.now(),rows}); return rows;
 }
 // नाव (मराठी/English, स्पेलिंग थोडे वेगळे असले तरी) किंवा जॉबकार्डमधील / नंतरचा क्रमांक यावरून शोध (टाइप करताच)
 function searchW(list,qRaw,village){
@@ -996,7 +943,7 @@ $('vl').addEventListener('input',()=>{ if($('rq').value) renderReg(); });
 
 // ===== मोबाईल टॅब =====
 let W=[], wKey='', mobReady=false, mobLoadId=0;
-function mobInit(){ if(mobReady || restricted()) return; mobReady=true; const s=ls('mloc'); if(s&&s.j){ setVal('mj',s.j); setVal('mt',s.t); setVal('mg',s.g); } }
+function mobInit(){ if(mobReady) return; mobReady=true; const s=ls('mloc'); if(s&&s.j){ setVal('mj',s.j); setVal('mt',s.t); setVal('mg',s.g); } }
 $('mj').addEventListener('input',()=>fill($('dmt'), talukas($('mj').value.trim()).map(x=>[x])));
 $('mt').addEventListener('input',()=>fill($('dmg'), gpsOf($('mj').value.trim(),$('mt').value.trim())));
 $('mg').addEventListener('input',()=>{
@@ -1043,7 +990,7 @@ async function saveMob(w,inp,btn,st){
   btn.disabled=true; st.className='st'; st.textContent='जतन होत आहे…';
   try{
     const x=await post({action:'setmobile',jilha:w.j,taluka:w.t,gpE:w.gpE,gpM:w.gpM,village:w.village,jobcard:w.jobcard,applicant:w.applicant,name:w.nameE||w.nameM,mobile:m,reg:w.done?1:0});
-    if(x.ok){ w.mobile=m; st.textContent=m?'✔ जतन झाले':'✔ नंबर काढला'; st.className='st ok'; if(mmShown) loadMyMob(); }
+    if(x.ok){ w.mobile=m; st.textContent=m?'✔ जतन झाले':'✔ नंबर काढला'; st.className='st ok'; loadMyMob(); }
     else { st.textContent='✖ '+(x.error||'जतन झाले नाही'); st.className='st bad'; }
   }catch(e){ if(e.message!=='auth'){ st.textContent='✖ इंटरनेट नाही – जतन झाले नाही'; st.className='st bad'; } }
   btn.disabled=false;
@@ -1126,85 +1073,14 @@ $('sus').onclick=()=>{
   const u=$('su').value.trim();
   if(!/^https:\/\/script\.google\.com\/(a\/[^\/]+\/)?macros\/s\/[\w-]+\/exec$/.test(u)){ $('serr').textContent='ही URL चुकीची दिसते – ती https://script.google.com/macros/s/…/exec अशी असावी'; return; }
   try{ localStorage.setItem('scriptUrl',u); }catch(e){}
-  SCRIPT_URL=u; $('serr').textContent=''; show('✔ सर्व्हर URL जतन झाली – आता लॉगिन करा','ok'); placeSud(); loadInit();
+  SCRIPT_URL=u; $('serr').textContent=''; show('✔ सर्व्हर URL जतन झाली – आता लॉगिन करा','ok'); loadInit();
 };
-
-
-// ===== गाव टॅब: ग्रामपंचायत → गाव निवडा → त्या गावातील मजुरांची यादी =====
-let VW=[], vKey='', vLoadId=0;
-const vv = id => $(id).value.trim();
-function vFill(){
-  const m=findGP(vv('vj'),vv('vt'),vv('vg')), sel=$('vvl'), cur=sel.value; sel.innerHTML='';
-  if(!m){ sel.add(new Option('आधी ग्रामपंचायत निवडा','')); return; }
-  const vs=uniq(GP.filter(x=>x.j===m.j&&x.t===m.t&&x.e===m.e).map(x=>x.v).concat(VW.map(w=>w.village)));
-  sel.add(new Option(vs.length?'— गाव निवडा —':'गावे यादीत नाहीत','')); vs.forEach(v=>sel.add(new Option(v,v)));
-  if(vs.includes(cur)) sel.value=cur;
-}
-$('vj').addEventListener('input',()=>fill($('dvt'), talukas(vv('vj')).map(x=>[x])));
-$('vt').addEventListener('input',()=>fill($('dvg'), gpsOf(vv('vj'),vv('vt'))));
-$('vg').addEventListener('input',()=>{
-  const m=findGP(vv('vj'),vv('vt'),vv('vg'));
-  if(m){ $('vg').value=m.e; vLoad(m); } else { VW=[]; vKey=''; vFill(); vRender(); $('vi').textContent=''; }
-});
-async function vLoad(m){
-  const key=m.j+'|'+m.t+'|'+m.e; if(key===vKey){ vFill(); vRender(); return; }
-  const id=++vLoadId; $('vi').textContent='मजूर यादी आणत आहे…';
-  try{
-    const rows=await getWorkers(m.j,m.t,m.e); if(id!==vLoadId) return;
-    VW=rows; vKey=key; vFill();
-    $('vi').textContent=rows.length?`${rows.length} मजूर – आता गाव निवडा`:'या ग्रामपंचायतीचे मजूर यादीत नाहीत (Admin ने Workers शीटमध्ये यादी भरावी)';
-    vRender();
-  }catch(e){ if(e.message!=='auth' && id===vLoadId) $('vi').textContent='इंटरनेट/URL तपासा'; }
-}
-$('vvl').addEventListener('change',()=>{ $('vq').value=''; vRender(); });
-$('vq').addEventListener('input',vRender);
-function vRender(){
-  const v=$('vvl').value, box=$('vr'); box.innerHTML=''; $('vwf').classList.toggle('hide',!v);
-  if(!v) return;
-  const all=VW.filter(w=>w.village.toLowerCase()===v.toLowerCase()), done=all.filter(w=>w.done).length;
-  let list=all; const q=$('vq').value; if(q.trim()){ const o=searchW(all,q,''); if(o) list=o; }
-  list=list.slice().sort((a,b)=>a.nameM.localeCompare(b.nameM,'mr')||a.nameE.localeCompare(b.nameE));
-  $('vh').textContent=`${v}: एकूण ${all.length} मजूर • ✔ नोंद झालेले ${done} • ✖ बाकी ${all.length-done}`+(q.trim()?` • ${list.length} सापडले`:'')+(list.length>50?' (पहिले ५० दाखवले – शोधून कमी करा)':'');
-  list.slice(0,50).forEach(w=>{
-    const c=document.createElement('div'); c.className='card'; c.style.borderLeftColor='var(--c3)';
-    const b=document.createElement('b'); b.textContent=wTitle(w)+(w.done?'  ✔ नोंद झाली':''); c.appendChild(b);
-    const s=document.createElement('small'); s.textContent=`जॉबकार्ड: ${w.jobcard} • अर्जदार: ${w.applicant}${w.mobile?' • 📱 '+w.mobile:''}`; c.appendChild(s);
-    const bt=document.createElement('button'); bt.type='button'; bt.className='btn sm'; bt.textContent=w.done?'पुन्हा उघडा':'नोंदणी करा'; bt.onclick=()=>vOpen(w); c.appendChild(bt);
-    box.appendChild(c);
-  });
-}
-function vOpen(w){
-  tab(1);
-  $('j').value=w.j; $('t').value=w.t; $('g').value=w.gpE; $('gm').value=w.gpM||'';
-  RW=VW;
-  fill($('dv'), uniq(VW.map(x=>x.village).concat(GP.filter(x=>x.j===w.j&&x.t===w.t&&x.e===w.gpE).map(x=>x.v))).map(x=>[x]));
-  pickWorker(w);
-}
-
-// ===== नोंदणी फॉर्म: ग्रामपंचायत निवड =====
-$('rj').addEventListener('input',()=>fill($('drt'), talukas($('rj').value.trim()).map(x=>[x])));
-$('rt').addEventListener('input',()=>fill($('drg'), gpsOf($('rj').value.trim(),$('rt').value.trim())));
-$('rg').addEventListener('change',()=>{ const m=findGP($('rj').value.trim(),$('rt').value.trim(),$('rg').value.trim()); if(m) $('rg').value=m.e; });
-
-// ===== "…" ने संपणारा स्थिती-संदेश (उदा. "मजूर यादी आणत आहे…") रंगीत blink होतो =====
-(function(){
-  const upd=el=>{ if(el && el.classList) el.classList.toggle('blink', /…\s*$/.test(el.textContent||'')); };
-  const mo=new MutationObserver(ms=>ms.forEach(m=>upd(m.target.nodeType===3?m.target.parentElement:m.target)));
-  document.querySelectorAll('.hint,.st,.err').forEach(el=>mo.observe(el,{childList:true,characterData:true,subtree:true}));
-})();
-
-// ===== सर्व्हर URL: फक्त Admin पानावर; URL सेट नसेल तरच लॉगिन पानावर =====
-function placeSud(){
-  const d=$('sud'), toLogin=urlMissing()&&document.body.classList.contains('guest'), tgt=toLogin?$('pl'):$('p2');
-  if(d.parentNode===tgt) return;
-  if(toLogin) tgt.insertBefore(d,$('rf')); else tgt.insertBefore(d,tgt.firstChild);
-}
 
 // ===== सुरुवात =====
 ME=ls('me');
 if(ME){ startApp();
-  post({action:'login'}).then(x=>{ if(x.ok){ ME.name=x.name; ME.role=x.role; ME.users=x.users||[]; ME.jilha=x.jilha||''; ME.taluka=x.taluka||''; ME.gp=x.gp||''; ls('me',ME); setWho(); loadInit(); } }).catch(()=>{});
-} else { showLogin(); placeSud(); if(!urlMissing()) loadInit(); if(urlMissing()){ $('lerr').textContent='सर्व्हर URL सेट नाही – खाली "⚙ सर्व्हर URL" उघडून टाका'; $('sud').open=true; } }
+  post({action:'login'}).then(x=>{ if(x.ok){ ME.name=x.name; ME.role=x.role; ME.users=x.users||[]; ls('me',ME); setWho(); } }).catch(()=>{});
+} else { showLogin(); if(urlMissing()){ $('lerr').textContent='सर्व्हर URL सेट नाही – खाली "⚙ सर्व्हर URL" उघडून टाका'; $('sud').open=true; } }
 </script>
 </body>
 </html>
