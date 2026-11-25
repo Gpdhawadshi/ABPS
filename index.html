@@ -459,8 +459,17 @@ const gpsOf = (j,t) => { const s=new Map(); GP.filter(x=>x.j===j&&x.t===t).forEa
 const findGP = (j,t,raw) => GP.find(x=>x.j===j&&x.t===t&&(x.e.toLowerCase()===raw.toLowerCase()||x.m===raw));
 
 // ===== ठिकाण =====
-$('j').addEventListener('input',()=>{ fill($('dt'), talukas($('j').value.trim()).map(x=>[x])); if($('g').value) $('g').dispatchEvent(new Event('input')); });
-$('t').addEventListener('input',()=>{ fill($('dg'), gpsOf($('j').value.trim(),$('t').value.trim())); if($('g').value) $('g').dispatchEvent(new Event('input')); });
+// जिल्हा/तालुका बदलल्यावर: त्यात न बसणारे तालुका/ग्रामपंचायत पुसून टाकतो व यादी बदलतो
+function cascade(jId,tId,gId){
+  const j=$(jId).value.trim(), t=$(tId).value.trim(), g=$(gId).value.trim(), lc=x=>x.toLowerCase();
+  const vj=GP.some(x=>lc(x.j)===lc(j));
+  if(vj && t && !GP.some(x=>lc(x.j)===lc(j)&&lc(x.t)===lc(t)) && !GP.some(x=>lc(x.j)===lc(j)&&lc(x.t).startsWith(lc(t)))) $(tId).value='';
+  const t2=$(tId).value.trim(), vt=GP.some(x=>lc(x.j)===lc(j)&&lc(x.t)===lc(t2));
+  if(g && vj && (vt||!t2) && !findGP(j,t2,g)) $(gId).value='';
+  $(gId).dispatchEvent(new Event('input'));
+}
+$('j').addEventListener('input',()=>{ fill($('dt'), talukas($('j').value.trim()).map(x=>[x])); cascade('j','t','g'); });
+$('t').addEventListener('input',()=>{ fill($('dg'), gpsOf($('j').value.trim(),$('t').value.trim())); cascade('j','t','g'); });
 let lastRG='';
 $('g').addEventListener('input',()=>{
   const j=$('j').value.trim(), t=$('t').value.trim(), m=findGP(j,t,$('g').value.trim());
@@ -851,7 +860,7 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
-const SRV_VER='2026-11-25-b';
+const SRV_VER='2026-11-25-c';
 function srvNote(r){
   let t='';
   if(!r.ver) t+='⚠ जुनी Code.gs चालू आहे – नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version द्या. ';
@@ -945,8 +954,9 @@ function searchW(list,qRaw,village){
 // नाव टाइप केले असेल तर शोध; टाइप नसेल पण गाव निवडले असेल तर त्या गावातील सर्व मजूर; दोन्ही नसेल तर null
 function listW(list,q,village){
   const o=searchW(list,q,village); if(o!==null) return o;
-  const v=village.trim().toLowerCase(); if(!v || !list.some(w=>w.village.toLowerCase()===v)) return null;
-  return list.filter(w=>w.village.toLowerCase()===v).sort((a,b)=>a.nameM.localeCompare(b.nameM,'mr')||a.nameE.localeCompare(b.nameE));
+  const v=village.trim().toLowerCase(); if(!list.length) return null;
+  const vOk=v && list.some(w=>w.village.toLowerCase()===v);
+  return (vOk?list.filter(w=>w.village.toLowerCase()===v):list.slice()).sort((a,b)=>(vOk?0:a.village.localeCompare(b.village,'mr'))||a.nameM.localeCompare(b.nameM,'mr')||a.nameE.localeCompare(b.nameE));
 }
 const wTitle = w => [w.nameM,w.nameE].filter(Boolean).join(' / ');
 
@@ -967,8 +977,8 @@ function renderReg(){
   const box=$('rr'); box.innerHTML='';
   if(!RW.length) return;
   const out=listW(RW,$('rq').value,$('vl').value);
-  if(out===null){ $('rh').textContent=`${RW.length} मजूर यादीत – गाव निवडा किंवा नाव / नंतरचा क्रमांक टाइप करा`; return; }
-  const vq=$('vl').value.trim(); $('rh').textContent=out.length?`${vq&&!$('rq').value.trim()?vq+': ':''}${out.length} ${$('rq').value.trim()?'सापडले':'मजूर'}${out.length>100?' (पहिले १०० दाखवले – अजून टाइप करा)':''}`:'कोणी सापडले नाही';
+  if(out===null){ return; }
+  const vq=$('vl').value.trim(); $('rh').textContent=out.length?`${vq&&!$('rq').value.trim()?vq+': ':''}${out.length} ${$('rq').value.trim()?'सापडले':'मजूर'}${out.length>100?' (पहिले १०० दाखवले – गाव निवडा किंवा नाव टाइप करा)':''}`:'कोणी सापडले नाही';
   out.slice(0,100).forEach(w=>{
     const c=document.createElement('div'); c.className='card';
     const b=document.createElement('b'); b.textContent=wTitle(w)+(w.done?'  ✔ नोंद झाली':''); c.appendChild(b);
@@ -996,8 +1006,8 @@ $('vl').addEventListener('change',renderReg);
 // ===== मोबाईल टॅब =====
 let W=[], wKey='', mobReady=false, mobLoadId=0;
 function mobInit(){ if(mobReady || restricted()) return; mobReady=true; const s=ls('mloc'); if(s&&s.j){ setVal('mj',s.j); setVal('mt',s.t); setVal('mg',s.g); } }
-$('mj').addEventListener('input',()=>{ fill($('dmt'), talukas($('mj').value.trim()).map(x=>[x])); if($('mg').value) $('mg').dispatchEvent(new Event('input')); });
-$('mt').addEventListener('input',()=>{ fill($('dmg'), gpsOf($('mj').value.trim(),$('mt').value.trim())); if($('mg').value) $('mg').dispatchEvent(new Event('input')); });
+$('mj').addEventListener('input',()=>{ fill($('dmt'), talukas($('mj').value.trim()).map(x=>[x])); cascade('mj','mt','mg'); });
+$('mt').addEventListener('input',()=>{ fill($('dmg'), gpsOf($('mj').value.trim(),$('mt').value.trim())); cascade('mj','mt','mg'); });
 let lastMG='';
 $('mg').addEventListener('input',()=>{
   const j=$('mj').value.trim(), t=$('mt').value.trim(), m=findGP(j,t,$('mg').value.trim());
@@ -1023,8 +1033,8 @@ function renderRes(){
   const box=$('mr'); box.innerHTML='';
   if(!W.length){ $('mh').textContent=''; return; }
   const out=listW(W,$('mq').value,$('mv').value);
-  if(out===null){ $('mh').textContent='गाव निवडा किंवा नाव / नंतरचा क्रमांक टाइप करा'; return; }
-  const vq=$('mv').value.trim(); $('mh').textContent=out.length?`${vq&&!$('mq').value.trim()?vq+': ':''}${out.length} ${$('mq').value.trim()?'सापडले':'मजूर'}${out.length>100?' (पहिले १०० दाखवले – अजून टाइप करून कमी करा)':''}`:'कोणी सापडले नाही';
+  if(out===null){ $('mh').textContent=''; return; }
+  const vq=$('mv').value.trim(); $('mh').textContent=out.length?`${vq&&!$('mq').value.trim()?vq+': ':''}${out.length} ${$('mq').value.trim()?'सापडले':'मजूर'}${out.length>100?' (पहिले १०० दाखवले – गाव निवडा किंवा नाव टाइप करा)':''}`:'कोणी सापडले नाही';
   out.slice(0,100).forEach(w=>{
     const c=document.createElement('div'); c.className='card mcard';
     const b=document.createElement('b'); b.textContent=wTitle(w); c.appendChild(b);
@@ -1163,6 +1173,7 @@ function placeSud(){
   if(toLogin) tgt.insertBefore(d,$('rf')); else tgt.insertBefore(d,tgt.firstChild);
 }
 
+document.querySelector('#hdr p').textContent+=' • v'+SRV_VER;
 // ===== सुरुवात =====
 ME=ls('me');
 if(ME){ startApp();
