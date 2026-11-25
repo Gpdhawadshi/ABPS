@@ -121,6 +121,8 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 }
 @keyframes blinkc{0%{color:var(--c1);opacity:1}25%{color:var(--c2);opacity:.4}50%{color:var(--c3);opacity:1}75%{color:var(--c4);opacity:.4}100%{color:var(--c1);opacity:1}}
 .blink{animation:blinkc 1.3s linear infinite;font-weight:700}
+.hint.cnt{color:var(--ac);font-weight:600}
+.num{color:var(--ac);font-weight:800;font-size:1.15em}
 .scl{max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-right:4px}
 .hide{display:none}
 </style>
@@ -457,14 +459,16 @@ const gpsOf = (j,t) => { const s=new Map(); GP.filter(x=>x.j===j&&x.t===t).forEa
 const findGP = (j,t,raw) => GP.find(x=>x.j===j&&x.t===t&&(x.e.toLowerCase()===raw.toLowerCase()||x.m===raw));
 
 // ===== ठिकाण =====
-$('j').addEventListener('input',()=>fill($('dt'), talukas($('j').value.trim()).map(x=>[x])));
-$('t').addEventListener('input',()=>fill($('dg'), gpsOf($('j').value.trim(),$('t').value.trim())));
+$('j').addEventListener('input',()=>{ fill($('dt'), talukas($('j').value.trim()).map(x=>[x])); if($('g').value) $('g').dispatchEvent(new Event('input')); });
+$('t').addEventListener('input',()=>{ fill($('dg'), gpsOf($('j').value.trim(),$('t').value.trim())); if($('g').value) $('g').dispatchEvent(new Event('input')); });
+let lastRG='';
 $('g').addEventListener('input',()=>{
   const j=$('j').value.trim(), t=$('t').value.trim(), m=findGP(j,t,$('g').value.trim());
   if(m){ $('g').value=m.e; $('gm').value=m.m;
+    if(m.e!==lastRG){ lastRG=m.e; $('vl').value=''; $('rq').value=''; }   // ग्रामपंचायत बदलली → जुने गाव/शोध पुसून नवी यादी
     fill($('dv'), uniq(GP.filter(x=>x.j===j&&x.t===t&&x.e===m.e).map(x=>x.v)).map(x=>[x]));
     PICK=null; loadRegWorkers(m); }
-  else { $('gm').value=''; fill($('dv'),[]); RW=[]; PICK=null; renderReg(); }
+  else { $('gm').value=''; fill($('dv'),[]); RW=[]; PICK=null; lastRG=''; $('rh').textContent=''; renderReg(); }
 });
 
 // ===== जॉबकार्ड: MH-11-001-002-001  /  Family ID (१० पर्यंत अंक/अक्षरे/डॅश) =====
@@ -634,7 +638,9 @@ $('ebx').onclick=()=>cancelEdit();
 
 // ===== नोंदी / दुरुस्ती यादी =====
 const mask = a => a? 'XXXX XXXX '+a.slice(-4) : '—';
+let entShown=false;
 async function loadEntries(){
+  entShown=true;
   $('lm').textContent='शोधत आहे…'; const box=$('ll'); box.innerHTML='';
   try{
     const x=await post({action:'list',q:$('lq').value.trim(),by:$('lb').value});
@@ -677,7 +683,7 @@ async function loadMyVillages(){
   }catch(e){ if(e.message!=='auth') $('pvh').textContent='इंटरनेट/URL तपासा'; }
 }
 $('pvg').onclick=loadMyVillages;
-$('lb').addEventListener('change',()=>{ if($('pvl').options.length>1) loadMyVillages(); });
+$('lb').addEventListener('change',()=>{ if($('pvl').options.length>1) loadMyVillages(); if(entShown) loadEntries(); });
 function printMine(r,vname){
   PDF=null; const pv=$('pv'), num={numeric:true}; pv.innerHTML='';
   const list=r.entries.slice().sort((a,b)=>a.family.localeCompare(b.family,undefined,num)||a.applicant.localeCompare(b.applicant,undefined,num));
@@ -845,7 +851,7 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
-const SRV_VER='2026-11-25-a';
+const SRV_VER='2026-11-25-b';
 function srvNote(r){
   let t='';
   if(!r.ver) t+='⚠ जुनी Code.gs चालू आहे – नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version द्या. ';
@@ -904,7 +910,7 @@ const toW = (r,j,t) => { const nm=(r[5]+' '+r[6]).toLowerCase().replace(ZW,''), 
 const WP=new Map();   // एकाच वेळी एकाच यादीसाठी अनेक विनंत्या जाऊ नयेत
 async function getWorkers(j,t,gE,force){
   const key=j+'|'+t+'|'+gE, c=WC.get(key);
-  if(c && !force && Date.now()-c.t<600000) return c.rows;
+  if(c && !force && Date.now()-c.t<60000) return c.rows;
   if(WP.has(key) && !force) return WP.get(key);
   const p=(async()=>{
     const x=await post({action:'workers',jilha:j,taluka:t,gp:gE});
@@ -936,6 +942,12 @@ function searchW(list,qRaw,village){
   out.sort((a,b)=>a[0]-b[0]||a[1].village.localeCompare(b[1].village,'mr')||a[1].nameM.localeCompare(b[1].nameM,'mr'));
   return out.map(x=>x[1]);
 }
+// नाव टाइप केले असेल तर शोध; टाइप नसेल पण गाव निवडले असेल तर त्या गावातील सर्व मजूर; दोन्ही नसेल तर null
+function listW(list,q,village){
+  const o=searchW(list,q,village); if(o!==null) return o;
+  const v=village.trim().toLowerCase(); if(!v || !list.some(w=>w.village.toLowerCase()===v)) return null;
+  return list.filter(w=>w.village.toLowerCase()===v).sort((a,b)=>a.nameM.localeCompare(b.nameM,'mr')||a.nameE.localeCompare(b.nameE));
+}
 const wTitle = w => [w.nameM,w.nameE].filter(Boolean).join(' / ');
 
 // ===== नोंदणी टॅब: यादीतून मजूर निवडा → फॉर्म आपोआप भरतो =====
@@ -954,9 +966,9 @@ async function loadRegWorkers(m){
 function renderReg(){
   const box=$('rr'); box.innerHTML='';
   if(!RW.length) return;
-  const out=searchW(RW,$('rq').value,$('vl').value);
-  if(out===null){ return; }
-  $('rh').textContent=out.length?`${out.length} सापडले${out.length>100?' (पहिले १०० दाखवले – अजून टाइप करा)':''}`:'कोणी सापडले नाही';
+  const out=listW(RW,$('rq').value,$('vl').value);
+  if(out===null){ $('rh').textContent=`${RW.length} मजूर यादीत – गाव निवडा किंवा नाव / नंतरचा क्रमांक टाइप करा`; return; }
+  const vq=$('vl').value.trim(); $('rh').textContent=out.length?`${vq&&!$('rq').value.trim()?vq+': ':''}${out.length} ${$('rq').value.trim()?'सापडले':'मजूर'}${out.length>100?' (पहिले १०० दाखवले – अजून टाइप करा)':''}`:'कोणी सापडले नाही';
   out.slice(0,100).forEach(w=>{
     const c=document.createElement('div'); c.className='card';
     const b=document.createElement('b'); b.textContent=wTitle(w)+(w.done?'  ✔ नोंद झाली':''); c.appendChild(b);
@@ -978,19 +990,22 @@ function pickWorker(w){
   $('aa').focus();
 }
 $('rq').addEventListener('input',renderReg);
-$('vl').addEventListener('input',()=>{ if($('rq').value) renderReg(); });
+$('vl').addEventListener('input',renderReg);
+$('vl').addEventListener('change',renderReg);
 
 // ===== मोबाईल टॅब =====
 let W=[], wKey='', mobReady=false, mobLoadId=0;
 function mobInit(){ if(mobReady || restricted()) return; mobReady=true; const s=ls('mloc'); if(s&&s.j){ setVal('mj',s.j); setVal('mt',s.t); setVal('mg',s.g); } }
-$('mj').addEventListener('input',()=>fill($('dmt'), talukas($('mj').value.trim()).map(x=>[x])));
-$('mt').addEventListener('input',()=>fill($('dmg'), gpsOf($('mj').value.trim(),$('mt').value.trim())));
+$('mj').addEventListener('input',()=>{ fill($('dmt'), talukas($('mj').value.trim()).map(x=>[x])); if($('mg').value) $('mg').dispatchEvent(new Event('input')); });
+$('mt').addEventListener('input',()=>{ fill($('dmg'), gpsOf($('mj').value.trim(),$('mt').value.trim())); if($('mg').value) $('mg').dispatchEvent(new Event('input')); });
+let lastMG='';
 $('mg').addEventListener('input',()=>{
   const j=$('mj').value.trim(), t=$('mt').value.trim(), m=findGP(j,t,$('mg').value.trim());
-  if(m){ $('mg').value=m.e; ls('mloc',{j,t,g:m.e}); loadWorkers(m); }
-  else { W=[]; wKey=''; $('mi').textContent=''; renderRes(); }
+  if(m){ $('mg').value=m.e; ls('mloc',{j,t,g:m.e}); if(m.e!==lastMG){ lastMG=m.e; $('mv').value=''; $('mq').value=''; } loadWorkers(m); }
+  else { W=[]; wKey=''; lastMG=''; $('mi').textContent=''; fill($('dmv'),[]); renderRes(); }
 });
 $('mv').addEventListener('input',renderRes);
+$('mv').addEventListener('change',renderRes);
 $('mq').addEventListener('input',renderRes);
 async function loadWorkers(m){
   const j=$('mj').value.trim(), t=$('mt').value.trim(), key=j+'|'+t+'|'+m.e;
@@ -1007,9 +1022,9 @@ async function loadWorkers(m){
 function renderRes(){
   const box=$('mr'); box.innerHTML='';
   if(!W.length){ $('mh').textContent=''; return; }
-  const out=searchW(W,$('mq').value,$('mv').value);
-  if(out===null){ $('mh').textContent='नाव किंवा / नंतरचा क्रमांक टाइप करा'; return; }
-  $('mh').textContent=out.length?`${out.length} सापडले${out.length>100?' (पहिले १०० दाखवले – अजून टाइप करून कमी करा)':''}`:'कोणी सापडले नाही';
+  const out=listW(W,$('mq').value,$('mv').value);
+  if(out===null){ $('mh').textContent='गाव निवडा किंवा नाव / नंतरचा क्रमांक टाइप करा'; return; }
+  const vq=$('mv').value.trim(); $('mh').textContent=out.length?`${vq&&!$('mq').value.trim()?vq+': ':''}${out.length} ${$('mq').value.trim()?'सापडले':'मजूर'}${out.length>100?' (पहिले १०० दाखवले – अजून टाइप करून कमी करा)':''}`:'कोणी सापडले नाही';
   out.slice(0,100).forEach(w=>{
     const c=document.createElement('div'); c.className='card mcard';
     const b=document.createElement('b'); b.textContent=wTitle(w); c.appendChild(b);
@@ -1123,9 +1138,20 @@ $('rg').addEventListener('change',()=>{ const m=findGP($('rj').value.trim(),$('r
 
 // ===== "…" ने संपणारा स्थिती-संदेश (उदा. "मजूर यादी आणत आहे…") रंगीत blink होतो =====
 (function(){
-  const upd=el=>{ if(el && el.classList) el.classList.toggle('blink', /…\s*$/.test(el.textContent||'')); };
+  const upd=el=>{
+    if(!el || !el.classList) return;
+    const t=el.textContent||'', loading=/…\s*$/.test(t);
+    el.classList.toggle('blink', loading);
+    if(!el.classList.contains('hint') || el.children.length>1 || (el.children.length===1 && !el.children[0].classList.contains('num'))) return;
+    const has=/[0-9०-९]/.test(t);
+    el.classList.toggle('cnt', has && !loading);
+    if(el.dataset.rt===t) return; el.dataset.rt=t;
+    if(!has || loading) return;
+    el.textContent='';
+    t.split(/([0-9०-९]+)/).forEach((p,i)=>{ if(!p) return; if(i%2){ const b=document.createElement('b'); b.className='num'; b.textContent=p; el.appendChild(b); } else el.appendChild(document.createTextNode(p)); });
+  };
   const mo=new MutationObserver(ms=>ms.forEach(m=>upd(m.target.nodeType===3?m.target.parentElement:m.target)));
-  document.querySelectorAll('.hint,.st,.err').forEach(el=>mo.observe(el,{childList:true,characterData:true,subtree:true}));
+  document.querySelectorAll('.hint,.st,.err').forEach(el=>{ mo.observe(el,{childList:true,characterData:true,subtree:true}); upd(el); });
 })();
 
 // ===== सर्व्हर URL: फक्त Admin पानावर; URL सेट नसेल तरच लॉगिन पानावर =====
