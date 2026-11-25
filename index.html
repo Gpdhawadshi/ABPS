@@ -583,6 +583,14 @@ function confirmReplace(old,changed,rec){ return new Promise(res=>{
 // ===== जतन / दुरुस्ती =====
 function busy(b){ $('sb').disabled=b; $('sb').textContent=b?'जतन होत आहे…':(EDIT?'दुरुस्ती जतन करा':'जतन करा'); }
 const LOCKED = x => `✖ ही नोंद ${x.by} यांनी केली आहे – दुरुस्तीसाठी त्यांना किंवा Admin ला सांगा`;
+// अर्जदार क्रमांक पडताळणी: मजूर यादीत हे Family ID असेल पण हा अर्जदार क्रमांक त्यात नसेल तर फॉर्म स्वीकारला जात नाही
+function apCheck(rec){
+  const num=x=>String(x||'').replace(/\D/g,'').replace(/^0+/,'')||'0', fam=String(rec.family||'').toLowerCase();
+  const fw=RW.filter(w=>w.fam===fam && w.gpE===rec.gpE);
+  if(!fw.length || fw.some(w=>num(w.applicant)===num(rec.applicant))) return '';
+  const v=[...new Set(fw.map(w=>w.applicant))];
+  return `अर्जदार क्रमांक ${rec.applicant} चुकीचा आहे – या Family ID चे अर्जदार क्रमांक: ${v.join(', ')}`;
+}
 $('f').addEventListener('submit',async ev=>{
   ev.preventDefault();
   if(!check()){ show('जतन झाले नाही – लाल रंगातील चुका दुरुस्त करा','no'); const b=document.querySelector('.bad'); if(b) b.scrollIntoView({block:'center',behavior:'smooth'}); return; }
@@ -590,6 +598,8 @@ $('f').addEventListener('submit',async ev=>{
     jobcard:$('jc').value==='MH-'?'':$('jc').value,
     family:$('fm').value,applicant:$('ap').value,name:$('nm').value.trim(),aadhaar:$('aa').value.replace(/\s/g,''),aadhaarName:$('an').value.trim(),mobile:$('mb').value,
     bank:$('bn').value.trim(),ifsc:$('ifsc').value,account:$('acc').value,accountName:$('acn').value.trim()};
+  const apBad=apCheck(rec);
+  if(apBad){ $('e_ap').textContent=apBad; $('ap').classList.add('bad'); show('जतन झाले नाही – '+apBad,'no'); $('ap').scrollIntoView({block:'center',behavior:'smooth'}); $('ap').focus(); return; }
   busy(true);
   try{
     if(EDIT){
@@ -871,7 +881,7 @@ function xVillages(){
 $('xj').addEventListener('input',()=>{ fill($('dxt'), talukas($('xj').value.trim()).map(x=>[x])); xVillages(); });
 $('xt').addEventListener('input',()=>{ fill($('dxg'), gpsOf($('xj').value.trim(),$('xt').value.trim())); xVillages(); });
 $('xg').addEventListener('input',()=>{ const m=findGP($('xj').value.trim(),$('xt').value.trim(),$('xg').value.trim()); if(m) $('xg').value=m.e; xVillages(); });
-const SRV_VER='2026-11-25-d';
+const SRV_VER='2026-11-25-e';
 function srvNote(r){
   let t='';
   if(!r.ver) t+='⚠ जुनी Code.gs चालू आहे – नवीन Code.gs पेस्ट करून Deploy → Manage deployments → Edit → New version द्या. ';
