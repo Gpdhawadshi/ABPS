@@ -321,14 +321,14 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
 <section id="p3" class="hide">
 <fieldset><legend id="p3t">नोंदी / दुरुस्ती</legend>
 <div class="g">
- <div><label for="lq">शोधा (नाव, आधार, Family ID, गाव…)</label><input id="lq"></div>
+ <div><label for="lq" id="lql">शोधा (नाव, आधार, Family ID, मोबाईल…)</label><input id="lq"></div>
  <div id="lbw"><label for="lb">नोंद करणारा</label><select id="lb"><option value="">सर्व</option></select></div>
 </div>
 <button class="btn" id="ls" type="button" style="margin-top:8px">शोधा</button>
-<div id="lm" class="hint">नोंदी पाहण्यासाठी "शोधा" बटण दाबा</div>
+<div id="lm" class="hint">नाव, आधार, Family ID किंवा मोबाईल टाकून "शोधा" दाबा</div>
 </fieldset>
 <fieldset id="mpf"><legend>📄 माझ्या कामाची PDF (गावनिहाय)</legend>
-<label for="pvl">गाव निवडा (तुम्ही नोंद केलेल्या गावांतूनच)</label>
+<label for="pvl" id="pvlb">गाव निवडा (तुम्ही नोंद केलेल्या गावांतूनच)</label>
 <select id="pvl"><option value="">आधी "गावे आणा" दाबा</option></select>
 <button class="btn sm" id="pvg" type="button" style="margin-top:6px">गावे आणा</button>
 <div class="hint" id="pvh"></div>
@@ -482,7 +482,11 @@ $('cf').addEventListener('submit',async ev=>{
 function logout(forced){ localStorage.removeItem('me'); ME=null; EDIT=null; resetScope(); GP=(ls('init')||{gp:[]}).gp||[]; showLogin(forced?'लॉगिन अवैध झाले – पुन्हा लॉगिन करा':''); }
 $('lo').onclick=()=>logout(false);
 function setWho(){ $('wn').textContent=ME.name+(ME.role==='admin'?' (Admin)':''); $('n2').style.display=ME.role==='admin'?'':'none'; $('lbw').style.display=ME.role==='admin'?'':'none';
-  $('p3t').textContent=ME.role==='admin'?'सर्व नोंदी / दुरुस्ती':'माझ्या नोंदी / दुरुस्ती'; }
+  $('p3t').textContent=ME.role==='admin'?'सर्व नोंदी / दुरुस्ती':'माझ्या नोंदी / दुरुस्ती';
+  const adm=ME.role==='admin';
+  $('lql').textContent=adm?'शोधा (नाव, आधार, Family ID, मोबाईल, गाव…)':'शोधा (नाव, आधार, Family ID, मोबाईल)';
+  ['pvlb','pvl','pvg'].forEach(id=>$(id).style.display=adm?'':'none');
+  if(!adm && !entShown) $('lm').textContent='नाव, आधार, Family ID किंवा मोबाईल टाकून "शोधा" दाबा'; }
 function startApp(){ document.body.classList.remove('guest'); setWho(); placeSud(); tab(1); pingOnline(); loadInit().then(flush); qInfo(); instUI();
   if(ME && ME.role!=='admin' && !ME.gp) show('✖ तुमचे खाते कोणत्याही ग्रामपंचायतीला जोडलेले नाही – Admin ला सांगा (त्याशिवाय नोंदी करता येणार नाहीत)','no'); }
 $('lf').addEventListener('submit',async ev=>{
@@ -740,6 +744,7 @@ $('ebx').onclick=()=>cancelEdit();
 const mask = a => a? 'XXXX XXXX '+a.slice(-4) : '—';
 let entShown=false;
 async function loadEntries(){
+  if(ME.role!=='admin' && !$('lq').value.trim()){ $('ll').innerHTML=''; $('lm').textContent='आधी नाव, आधार, Family ID किंवा मोबाईल नंबर टाका, मग "शोधा" दाबा'; return; }
   entShown=true;
   $('lm').textContent='शोधत आहे…'; const box=$('ll'); box.innerHTML='';
   try{
@@ -808,14 +813,14 @@ function printMine(r,vname){
   document.body.classList.add('printing'); setTimeout(()=>window.print(),350);
 }
 $('pvb').onclick=async()=>{
-  const o=$('pvl').selectedOptions[0];
-  if(!o || !o.dataset.v){ $('pvm').textContent='आधी गाव निवडा'; return; }
+  const adm=ME.role==='admin', o=$('pvl').selectedOptions[0];
+  if(adm && (!o || !o.dataset.v)){ $('pvm').textContent='आधी गाव निवडा'; return; }
   $('pvb').disabled=true; $('pvm').textContent='यादी आणत आहे…';
   try{
-    const x=await post({action:'mypdf',village:o.dataset.v,gpE:o.dataset.g,by:$('lb').value});
+    const x=await post(adm?{action:'mypdf',village:o.dataset.v,gpE:o.dataset.g,by:$('lb').value}:{action:'mypdf'});
     if(!x.ok){ $('pvm').textContent='त्रुटी: '+(x.error||''); }
-    else if(!x.entries.length){ $('pvm').textContent='या गावात नोंदी सापडल्या नाहीत'; }
-    else { $('pvm').textContent=`${x.entries.length} नोंदी – प्रिंट विंडो उघडेल: "Save as PDF" निवडा`; printMine(x,o.dataset.v); }
+    else if(!x.entries.length){ $('pvm').textContent='नोंदी सापडल्या नाहीत'; }
+    else { $('pvm').textContent=`${x.entries.length} नोंदी – प्रिंट विंडो उघडेल: "Save as PDF" निवडा`; printMine(x,adm?o.dataset.v:(x.entries[0].gpM||x.entries[0].gpE)); }
   }catch(e){ if(e.message!=='auth') $('pvm').textContent='इंटरनेट/URL तपासा'; }
   $('pvb').disabled=false;
 };

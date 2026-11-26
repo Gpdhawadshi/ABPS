@@ -1,5 +1,5 @@
 // ABPS service worker – नेहमी आधी इंटरनेटवरून नवीन आवृत्ती; इंटरनेट नसेल तरच जुनी (ऑफलाइन) चालते.
-const CACHE = 'abps-2026-11-26-c';
+const CACHE = 'abps-2026-11-26-d';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
