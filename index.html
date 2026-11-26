@@ -136,6 +136,11 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 .scl{max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-right:4px}
 .hide{display:none}
 </style>
+<style>
+input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
+.lkbox{margin:8px 0;padding:8px 10px;border:1px solid #9bbf9b;background:#eef7ee;border-radius:8px;font-size:.92em}
+.lkbox button{margin-left:8px}
+</style>
 </head>
 <body data-tab="1" class="guest">
 <header id="hdr"><img src="icon-192.png" alt="ABPS" onerror="this.style.display='none'">
@@ -213,6 +218,9 @@ body.guest nav,body.guest #p1,body.guest #p2,body.guest #p3,body.guest #p4,body.
 </div>
 <div class="hint">MH व डॅश आपोआप येतील. / नंतर १० पर्यंत अंक/अक्षरे चालतील (उदा. 1234567890 किंवा 125-A).</div>
 <div class="err" id="e_jc"></div>
+<div class="lkbox" id="lk" style="display:none">🔒 गाव, जॉबकार्ड, Family ID, अर्जदार क्रमांक व नाव मजूर यादीतून आले आहे – ते बदलता येत नाही.
+ <button type="button" class="btn sm" id="lkb">दुसरा मजूर निवडा</button>
+ <button type="button" class="btn sm" id="lka" style="display:none">🔓 Admin: बदल करा</button></div>
 <div class="g" style="margin-top:6px">
  <div><label for="ap">जॉबकार्डमधील अर्जदार क्रमांक</label><input id="ap" inputmode="numeric" maxlength="3"><div class="err" id="e_ap"></div></div>
  <div><label for="nm">नाव (जॉबकार्ड / लाभार्थी)</label><input id="nm" autocapitalize="words"><div class="err" id="e_nm"></div></div>
@@ -455,9 +463,10 @@ setInterval(()=>{ if(!document.hidden && ME){ _lastInit=Date.now(); loadInit(); 
 // ===== ग्रामपंचायत बंधन: user ला फक्त स्वतःची ग्रामपंचायत (Admin ला सर्व) =====
 const restricted = () => !!(ME && ME.role!=='admin' && ME.gp);
 const SCOPE_IDS=['j','t','g','mj','mt','mg'];
-function resetScope(){ SCOPE_IDS.forEach(id=>{ const e=$(id); e.readOnly=false; e.value=''; }); $('gm').value=''; W=[]; wKey=''; RW=[]; PICK=null; }
+function resetScope(){ lockPick(false); SCOPE_IDS.forEach(id=>{ const e=$(id); e.readOnly=false; e.value=''; }); $('gm').value=''; W=[]; wKey=''; RW=[]; PICK=null; }
 function applyScope(){
   if(!ME) return;
+  lockPick(false);
   const lock=restricted();
   SCOPE_IDS.forEach(id=>{ $(id).readOnly=lock; });
   if(!lock||!GP.length) return;
@@ -487,8 +496,8 @@ $('g').addEventListener('input',()=>{
   if(m){ $('g').value=m.e; $('gm').value=m.m;
     if(m.e!==lastRG){ lastRG=m.e; $('vl').value=''; $('rq').value=''; }   // ग्रामपंचायत बदलली → जुने गाव/शोध पुसून नवी यादी
     fill($('dv'), uniq(GP.filter(x=>x.j===j&&x.t===t&&x.e===m.e).map(x=>x.v)).map(x=>[x]));
-    PICK=null; loadRegWorkers(m); }
-  else { $('gm').value=''; fill($('dv'),[]); RW=[]; PICK=null; lastRG=''; $('rh').textContent=''; renderReg(); }
+    PICK=null; lockPick(false); loadRegWorkers(m); }
+  else { $('gm').value=''; fill($('dv'),[]); RW=[]; PICK=null; lockPick(false); lastRG=''; $('rh').textContent=''; renderReg(); }
 });
 
 // ===== जॉबकार्ड: MH-11-001-002-001  /  Family ID (१० पर्यंत अंक/अक्षरे/डॅश) =====
@@ -582,7 +591,15 @@ function confirmReplace(old,changed,rec){ return new Promise(res=>{
 
 // ===== जतन / दुरुस्ती =====
 function busy(b){ $('sb').disabled=b; $('sb').textContent=b?'जतन होत आहे…':(EDIT?'दुरुस्ती जतन करा':'जतन करा'); }
-const LOCKED = x => `✖ ही नोंद ${x.by} यांनी केली आहे – दुरुस्तीसाठी त्यांना किंवा Admin ला सांगा`;
+const LOCKED = x => {
+  let m=`✖ ही नोंद ${x.by} यांनी केली आहे`;
+  if(x.ex){
+    m+=` (नाव: ${x.ex.name}, गाव: ${x.ex.village||'—'}, जॉबकार्ड: ${x.ex.jobcard||'—'} / ${x.ex.family}, अर्जदार ${x.ex.applicant})`;
+    const dg=s=>String(s||'').replace(/\D/g,''), mine=dg($('jc').value);
+    if(dg(x.ex.jobcard) && mine.length>3 && dg(x.ex.jobcard)!==mine) m+=' ⚠ जॉबकार्ड वेगळे आहे – गाव तपासा किंवा Admin ला कळवा';
+  }
+  return m+' – दुरुस्तीसाठी त्यांना किंवा Admin ला सांगा';
+};
 // अर्जदार क्रमांक पडताळणी: मजूर यादीत हे Family ID असेल पण हा अर्जदार क्रमांक त्यात नसेल तर फॉर्म स्वीकारला जात नाही
 function apCheck(rec){
   const num=x=>String(x||'').replace(/\D/g,'').replace(/^0+/,'')||'0', fam=String(rec.family||'').toLowerCase();
@@ -637,6 +654,7 @@ $('f').addEventListener('submit',async ev=>{
 // नोंदणी/दुरुस्ती झाल्यावर: मोबाईल टॅबवरील मजूर यादी (नवीन नंबरसह) ताजी होते
 function afterSave(){ WC.clear(); W=[]; wKey=''; if(mmShown) loadMyMob(); }
 function resetForm(){
+  lockPick(false);
   const keep=$('keep').checked && !EDIT;
   ['ap','nm','aa','an','mb','bn','ifsc','acc','acn','bt'].forEach(k=>$(k).value='');
   if(!keep){ $('jc').value='MH-'; $('fm').value=''; }
@@ -651,6 +669,7 @@ window.addEventListener('online',flush);
 // ===== दुरुस्ती मोड =====
 function setVal(id,v){ $(id).value=v||''; $(id).dispatchEvent(new Event('input')); }
 function editEntry(e){
+  lockPick(false);
   EDIT={gpE:e.gpE,gpM:e.gpM,village:e.village,family:e.family,applicant:e.applicant};
   tab(1);
   setVal('j',e.jilha); setVal('t',e.taluka); setVal('g',e.gpE); setVal('vl',e.village);
@@ -1008,6 +1027,18 @@ function renderReg(){
     box.appendChild(c);
   });
 }
+const LOCK_IDS=['vl','jc','fm','ap','nm'];
+function lockPick(on){
+  LOCK_IDS.forEach(id=>{ const e=$(id); e.readOnly=!!on; e.classList.toggle('locked',!!on); });
+  $('lk').style.display=on?'block':'none';
+  $('lka').style.display=(on&&ME&&ME.role==='admin')?'inline-block':'none';
+}
+$('lkb').addEventListener('click',()=>{            // दुसरा मजूर निवडा: जॉबकार्ड भाग साफ + अनलॉक
+  lockPick(false); PICK=null;
+  $('jc').value='MH-'; ['fm','ap','nm'].forEach(id=>$(id).value='');
+  document.querySelectorAll('.err').forEach(e=>e.textContent=''); document.querySelectorAll('.bad').forEach(e=>e.classList.remove('bad'));
+  $('rh').textContent=''; $('rq').focus(); });
+$('lka').addEventListener('click',()=>{ lockPick(false); });   // फक्त Admin: जसेच्या तसे ठेवून बदलता यावे
 function pickWorker(w){
   PICK=w; EDIT=null; $('eb').classList.remove('show');
   setVal('vl',w.village);
@@ -1018,6 +1049,7 @@ function pickWorker(w){
   $('rr').innerHTML=''; $('rq').value='';
   $('rh').textContent='✔ निवडले: '+wTitle(w)+' – आता आधार व बँक तपशील भरा';
   document.querySelectorAll('.err').forEach(e=>e.textContent=''); document.querySelectorAll('.bad').forEach(e=>e.classList.remove('bad'));
+  lockPick(true);
   $('aa').focus();
 }
 $('rq').addEventListener('input',renderReg);
