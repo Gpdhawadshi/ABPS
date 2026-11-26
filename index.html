@@ -172,7 +172,7 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
    <div class="w"><label for="rg">तुमची ग्रामपंचायत (English / मराठी) – तुम्ही फक्त हीच ग्रामपंचायत उघडू शकाल</label><input id="rg" list="drg" placeholder="शोधा / निवडा"></div>
    <div><label for="ru">तुमचा Username (a-z, 0-9, ., _ ; ३-२० अक्षरे)</label><input id="ru" autocapitalize="none" autocomplete="off"></div>
    <div><label for="rm">तुमचा मोबाईल नंबर (PIN विसरल्यास ओळखीसाठी)</label><input id="rm" inputmode="numeric" maxlength="10" autocomplete="off"></div>
-    <div><label for="rc">नोंदणी कोड (Admin ने दिला असेल तर)</label><input id="rc" autocomplete="off"></div>
+
    <div><label for="rp">PIN (४ ते ६ अंक)</label><input id="rp" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
    <div><label for="rp2">PIN पुन्हा टाका</label><input id="rp2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
   </div>
@@ -433,7 +433,7 @@ $('rp2').addEventListener('input',()=>{ $('rp2').value=$('rp2').value.replace(/\
 const weakPin = p => /^(\d)\1+$/.test(p) || ['1234','12345','123456','4321','654321','2580'].includes(p);
 $('rf').addEventListener('submit',async ev=>{
   ev.preventDefault(); const E=t=>{ $('rerr').textContent=t; };
-  const name=$('rn').value.trim(), u=$('ru').value.trim(), p=$('rp').value, p2=$('rp2').value, code=$('rc').value.trim(), mobile=$('rm').value.trim();
+  const name=$('rn').value.trim(), u=$('ru').value.trim(), p=$('rp').value, p2=$('rp2').value, mobile=$('rm').value.trim();
   const rj=$('rj').value.trim(), rt=$('rt').value.trim(), rgm=findGP(rj,rt,$('rg').value.trim());
   if(name.length<3) return E('पूर्ण नाव लिहा');
   if(!rgm) return E('जिल्हा, तालुका व ग्रामपंचायत यादीतून निवडा');
@@ -444,10 +444,10 @@ $('rf').addEventListener('submit',async ev=>{
   if(p!==p2) return E('दोन्ही PIN सारखे नाहीत');
   $('rb1').disabled=true; E('खाते बनवत आहे…');
   try{
-    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,code,mobile,jilha:rj,taluka:rt,gp:rgm.e})})).json();
-    if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[],jilha:x.jilha||'',taluka:x.taluka||'',gp:x.gp||''}; ls('me',ME); ['rn','ru','rp','rp2','rc','rm'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
+    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,mobile,jilha:rj,taluka:rt,gp:rgm.e})})).json();
+    if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[],jilha:x.jilha||'',taluka:x.taluka||'',gp:x.gp||''}; ls('me',ME); ['rn','ru','rp','rp2','rm'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
     else if(x.error==='gptaken') E('या ग्रामपंचायतीसाठी खाते आधीच बनले आहे (Username: '+(x.hint||'')+'). एका ग्रामपंचायतीला एकच user. Username/PIN विसरला असाल तर "मागे – लॉगिन" वरून "विसरलात?" वापरा.');
-    else E({badmobile:'मोबाईल नंबर १० अंकी (६-९ ने सुरू) द्या',exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',code:'नोंदणी कोड चुकीचा आहे',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',badgp:'ग्रामपंचायत यादीतील नाही – पुन्हा निवडा',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
+    else E({badmobile:'मोबाईल नंबर १० अंकी (६-९ ने सुरू) द्या',exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',badgp:'ग्रामपंचायत यादीतील नाही – पुन्हा निवडा',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
   }catch(e){ E('इंटरनेट/URL तपासा'); explainNet(e); }
   $('rb1').disabled=false;
 });
