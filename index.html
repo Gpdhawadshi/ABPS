@@ -673,7 +673,7 @@ function confirmReplace(old,changed,rec){ return new Promise(res=>{
 // ===== जतन / दुरुस्ती =====
 function busy(b){ $('sb').disabled=b; $('sb').textContent=b?'जतन होत आहे…':(EDIT?'दुरुस्ती जतन करा':'जतन करा'); }
 const LOCKED = x => {
-  let m=`✖ ही नोंद ${x.by} यांनी केली आहे`;
+  let m=`✖ ही नोंद ${x.by}${x.byUser&&x.byUser!==x.by?' (username: '+x.byUser+')':''} यांनी केली आहे${x.at?' – पहिली नोंद: '+x.at:''}`;
   if(x.ex){
     m+=` (नाव: ${x.ex.name}, गाव: ${x.ex.village||'—'}, जॉबकार्ड: ${x.ex.jobcard||'—'} / ${x.ex.family}, अर्जदार ${x.ex.applicant})`;
     const dg=s=>String(s||'').replace(/\D/g,''), mine=dg($('jc').value);
