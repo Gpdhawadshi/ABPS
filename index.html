@@ -160,6 +160,7 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
   <button class="btn" id="lb1" type="submit" style="margin-top:8px">लॉगिन</button>
   <p class="hint">तुम्ही केलेल्या नोंदी फक्त तुम्ही व Admin दुरुस्त करू शकता.</p>
   <button class="btn b3" id="showReg" type="button">पहिल्यांदा वापरताय? नवीन खाते बनवा</button>
+  <button class="btn b3" id="showRec" type="button">Username / PIN विसरलात?</button>
  </fieldset>
  </form>
 <form id="rf" autocomplete="off" class="hide">
@@ -170,15 +171,34 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
    <div><label for="rt">तालुका</label><input id="rt" list="drt" placeholder="शोधा / निवडा"></div>
    <div class="w"><label for="rg">तुमची ग्रामपंचायत (English / मराठी) – तुम्ही फक्त हीच ग्रामपंचायत उघडू शकाल</label><input id="rg" list="drg" placeholder="शोधा / निवडा"></div>
    <div><label for="ru">तुमचा Username (a-z, 0-9, ., _ ; ३-२० अक्षरे)</label><input id="ru" autocapitalize="none" autocomplete="off"></div>
-   <div><label for="rc">नोंदणी कोड (Admin ने दिला असेल तर)</label><input id="rc" autocomplete="off"></div>
+   <div><label for="rm">तुमचा मोबाईल नंबर (PIN विसरल्यास ओळखीसाठी)</label><input id="rm" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+    <div><label for="rc">नोंदणी कोड (Admin ने दिला असेल तर)</label><input id="rc" autocomplete="off"></div>
    <div><label for="rp">PIN (४ ते ६ अंक)</label><input id="rp" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
    <div><label for="rp2">PIN पुन्हा टाका</label><input id="rp2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
   </div>
   <div class="err" id="rerr"></div>
   <button class="btn" id="rb1" type="submit" style="margin-top:8px">खाते बनवा व सुरू करा</button>
   <button class="btn b3" id="showLog" type="button">मागे – लॉगिन</button>
-  <p class="hint">हा Username व PIN लक्षात ठेवा – पुढच्या वेळी यानेच लॉगिन करायचे आहे. PIN विसरलात तर Admin ला सांगा.</p>
+  <p class="hint">हा Username व PIN लक्षात ठेवा – पुढच्या वेळी यानेच लॉगिन करायचे आहे. PIN विसरलात तर लॉगिन पानावर "Username / PIN विसरलात?" वापरा. एका ग्रामपंचायतीसाठी एकच खाते बनते.</p>
  </fieldset>
+</form>
+<form id="cf" autocomplete="off" class="hide">
+  <fieldset><legend>Username / PIN पुन्हा मिळवा</legend>
+   <p class="hint">तुमची ग्रामपंचायत, नोंदणीच्या वेळी दिलेले पूर्ण नाव आणि नोंदणीचा मोबाईल नंबर द्या. (मोबाईल दिला नसेल तर Admin चा नोंदणी कोड.) ओळख पटल्यावर तुमचा Username दिसेल आणि नवीन PIN ठेवता येईल.</p>
+   <div class="g">
+    <div class="w"><label for="cn">नोंदणीच्या वेळी दिलेले पूर्ण नाव</label><input id="cn"></div>
+    <div><label for="cj">जिल्हा</label><input id="cj" list="dj" placeholder="शोधा / निवडा"></div>
+    <div><label for="ct">तालुका</label><input id="ct" list="dcrt" placeholder="शोधा / निवडा"></div>
+    <div class="w"><label for="cg">तुमची ग्रामपंचायत</label><input id="cg" list="dcrg" placeholder="शोधा / निवडा"></div>
+    <div><label for="cm">नोंदणीचा मोबाईल नंबर</label><input id="cm" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+    <div><label for="cc">नोंदणी कोड (मोबाईल दिला नसेल तर)</label><input id="cc" autocomplete="off"></div>
+    <div><label for="cp">नवीन PIN (४ ते ६ अंक)</label><input id="cp" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+    <div><label for="cp2">नवीन PIN पुन्हा टाका</label><input id="cp2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+   </div>
+   <div class="err" id="cerr"></div>
+   <button class="btn" id="cb1" type="submit" style="margin-top:8px">ओळख पटवा व नवीन PIN ठेवा</button>
+   <button class="btn b3" id="showLog2" type="button">मागे – लॉगिन</button>
+  </fieldset>
 </form>
 </section>
 
@@ -294,7 +314,7 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
 <button class="btn b3" type="button" data-rep="log">४) सर्व कामांचा तपशील (Log)</button>
 <button class="btn" type="button" data-rep="per" style="margin-top:8px">५) प्रत्येक कर्मचाऱ्याच्या नोंदी (वेगळ्या शीट)</button>
 <button class="btn b3" type="button" data-rep="pergp">६) ग्रामपंचायतवार नोंदी (प्रत्येक ग्रामपंचायतीची वेगळी शीट)</button>
-<div id="rm" class="hint"></div>
+<div id="repmsg" class="hint"></div>
 </fieldset>
 </section>
 
@@ -363,7 +383,7 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
 
 <div id="pv"></div>
 <div id="toast" role="status" aria-live="polite"></div>
-<datalist id="dj"></datalist><datalist id="drt"></datalist><datalist id="drg"></datalist><datalist id="dt"></datalist><datalist id="dg"></datalist><datalist id="dv"></datalist>
+<datalist id="dj"></datalist><datalist id="drt"></datalist><datalist id="drg"></datalist><datalist id="dcrt"></datalist><datalist id="dcrg"></datalist><datalist id="dt"></datalist><datalist id="dg"></datalist><datalist id="dv"></datalist>
 <datalist id="db"></datalist><datalist id="dxt"></datalist><datalist id="dxg"></datalist><datalist id="dmt"></datalist><datalist id="dmg"></datalist><datalist id="dmv"></datalist>
 
 <div id="dev">Developer: <b>GRS धावडशी</b>, परशुराम नामदेव पवार • 📞 <a href="tel:9049254300">9049254300</a></div>
@@ -404,8 +424,8 @@ async function post(obj){
 }
 
 // ===== लॉगिन =====
-function showLogin(t){ document.body.classList.add('guest'); $('lerr').textContent=t||''; $('lf').classList.remove('hide'); $('rf').classList.add('hide'); }
-$('showReg').onclick=()=>{ loadInit(); $('lf').classList.add('hide'); $('rf').classList.remove('hide'); $('rerr').textContent=''; };
+function showLogin(t){ document.body.classList.add('guest'); $('lerr').textContent=t||''; $('lf').classList.remove('hide'); $('rf').classList.add('hide'); $('cf').classList.add('hide'); }
+$('showReg').onclick=()=>{ loadInit(); $('lf').classList.add('hide'); $('cf').classList.add('hide'); $('rf').classList.remove('hide'); $('rerr').textContent=''; };
 $('showLog').onclick=()=>showLogin();
 $('ru').addEventListener('input',()=>{ $('ru').value=$('ru').value.toLowerCase().replace(/[^a-z0-9._]/g,'').slice(0,20); });
 $('rp').addEventListener('input',()=>{ $('rp').value=$('rp').value.replace(/\D/g,'').slice(0,6); });
@@ -413,27 +433,58 @@ $('rp2').addEventListener('input',()=>{ $('rp2').value=$('rp2').value.replace(/\
 const weakPin = p => /^(\d)\1+$/.test(p) || ['1234','12345','123456','4321','654321','2580'].includes(p);
 $('rf').addEventListener('submit',async ev=>{
   ev.preventDefault(); const E=t=>{ $('rerr').textContent=t; };
-  const name=$('rn').value.trim(), u=$('ru').value.trim(), p=$('rp').value, p2=$('rp2').value, code=$('rc').value.trim();
+  const name=$('rn').value.trim(), u=$('ru').value.trim(), p=$('rp').value, p2=$('rp2').value, code=$('rc').value.trim(), mobile=$('rm').value.trim();
   const rj=$('rj').value.trim(), rt=$('rt').value.trim(), rgm=findGP(rj,rt,$('rg').value.trim());
   if(name.length<3) return E('पूर्ण नाव लिहा');
   if(!rgm) return E('जिल्हा, तालुका व ग्रामपंचायत यादीतून निवडा');
   if(!/^[a-z0-9._]{3,20}$/.test(u)) return E('Username ३ ते २० अक्षरांचे असावे (a-z, 0-9, ., _)');
+  if(!/^[6-9]\d{9}$/.test(mobile)) return E('मोबाईल नंबर १० अंकी (६-९ ने सुरू) द्या – PIN विसरल्यास ओळखीसाठी लागेल');
   if(!/^\d{4,6}$/.test(p)) return E('PIN ४ ते ६ अंकी असावा');
   if(weakPin(p)) return E('हा PIN सोपा आहे (उदा. 1234, 1111) – दुसरा PIN निवडा');
   if(p!==p2) return E('दोन्ही PIN सारखे नाहीत');
   $('rb1').disabled=true; E('खाते बनवत आहे…');
   try{
-    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,code,jilha:rj,taluka:rt,gp:rgm.e})})).json();
-    if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[],jilha:x.jilha||'',taluka:x.taluka||'',gp:x.gp||''}; ls('me',ME); ['rn','ru','rp','rp2','rc'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
-    else E({exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',code:'नोंदणी कोड चुकीचा आहे',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',badgp:'ग्रामपंचायत यादीतील नाही – पुन्हा निवडा',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
+    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'register',u,p,name,code,mobile,jilha:rj,taluka:rt,gp:rgm.e})})).json();
+    if(x.ok){ ME={u:x.u,p,name:x.name,role:'user',users:[],jilha:x.jilha||'',taluka:x.taluka||'',gp:x.gp||''}; ls('me',ME); ['rn','ru','rp','rp2','rc','rm'].forEach(k=>$(k).value=''); E(''); startApp(); show('✔ खाते तयार झाले – Username: '+x.u+' (लक्षात ठेवा)','ok'); }
+    else if(x.error==='gptaken') E('या ग्रामपंचायतीसाठी खाते आधीच बनले आहे (Username: '+(x.hint||'')+'). एका ग्रामपंचायतीला एकच user. Username/PIN विसरला असाल तर "मागे – लॉगिन" वरून "विसरलात?" वापरा.');
+    else E({badmobile:'मोबाईल नंबर १० अंकी (६-९ ने सुरू) द्या',exists:'हे Username आधीच घेतले आहे – दुसरे निवडा',code:'नोंदणी कोड चुकीचा आहे',weak:'हा PIN चालणार नाही – दुसरा निवडा',badid:'Username चुकीचे आहे',badname:'नाव ३ ते ४० अक्षरांचे असावे',badgp:'ग्रामपंचायत यादीतील नाही – पुन्हा निवडा',limit:'खूप नोंदणी प्रयत्न झाले – नंतर प्रयत्न करा'}[x.error]||('त्रुटी: '+(x.error||'')));
   }catch(e){ E('इंटरनेट/URL तपासा'); explainNet(e); }
   $('rb1').disabled=false;
+});
+$('showRec').onclick=()=>{ loadInit(); $('lf').classList.add('hide'); $('rf').classList.add('hide'); $('cf').classList.remove('hide'); $('cerr').textContent=''; };
+$('showLog2').onclick=()=>showLogin();
+$('cj').addEventListener('input',()=>fill($('dcrt'), talukas($('cj').value.trim()).map(x=>[x])));
+$('ct').addEventListener('input',()=>fill($('dcrg'), gpsOf($('cj').value.trim(),$('ct').value.trim())));
+$('cg').addEventListener('change',()=>{ const m=findGP($('cj').value.trim(),$('ct').value.trim(),$('cg').value.trim()); if(m) $('cg').value=m.e; });
+['cp','cp2'].forEach(id=>$(id).addEventListener('input',()=>{ $(id).value=$(id).value.replace(/\D/g,'').slice(0,6); }));
+['cm','rm'].forEach(id=>$(id).addEventListener('input',()=>{ $(id).value=$(id).value.replace(/\D/g,'').slice(0,10); }));
+$('cf').addEventListener('submit',async ev=>{
+  ev.preventDefault(); const E=t=>{ $('cerr').textContent=t; };
+  const name=$('cn').value.trim(), mobile=$('cm').value.trim(), code=$('cc').value.trim(), p=$('cp').value, p2=$('cp2').value;
+  const cj=$('cj').value.trim(), ct=$('ct').value.trim(), gm=findGP(cj,ct,$('cg').value.trim());
+  if(name.length<3) return E('नोंदणीच्या वेळी दिलेले पूर्ण नाव लिहा');
+  if(!gm) return E('जिल्हा, तालुका व ग्रामपंचायत यादीतून निवडा');
+  if(!mobile && !code) return E('नोंदणीचा मोबाईल नंबर किंवा नोंदणी कोड द्या');
+  if(!/^\d{4,6}$/.test(p)) return E('नवीन PIN ४ ते ६ अंकी असावा');
+  if(weakPin(p)) return E('हा PIN सोपा आहे (उदा. 1234, 1111) – दुसरा PIN निवडा');
+  if(p!==p2) return E('दोन्ही PIN सारखे नाहीत');
+  $('cb1').disabled=true; E('तपासत आहे…');
+  try{
+    const x=await (await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'recover',jilha:cj,taluka:ct,gp:gm.e,name,mobile,code,newp:p})})).json();
+    if(x.ok){ ['cn','cm','cc','cp','cp2'].forEach(k=>$(k).value=''); showLogin('✔ तुमचा Username: '+x.u+' – नवीन PIN सेट झाला. आता लॉगिन करा.'); $('lu').value=x.u; $('lp').value=''; $('lp').focus(); }
+    else E({badgp:'ग्रामपंचायत यादीतील नाही – पुन्हा निवडा',weak:'हा PIN चालणार नाही – दुसरा निवडा',limit:'खूप चुकीचे प्रयत्न झाले – १ तासानंतर प्रयत्न करा किंवा Admin ला सांगा',
+      nouser:'या ग्रामपंचायतीचे कोणतेही खाते सापडले नाही',noname:'हे नाव या ग्रामपंचायतीच्या खात्याशी जुळत नाही – नोंदणीच्या वेळी दिलेले पूर्ण नाव लिहा',
+      nomob:'मोबाईल नंबर नोंदणीतील नंबरशी जुळत नाही',code:'नोंदणी कोड चुकीचा आहे',
+      norecover:'या खात्यासाठी स्वतः पुनर्प्राप्ती शक्य नाही (नोंदणीचा मोबाईल/कोड उपलब्ध नाही) – Admin ला सांगा'}[x.error]||('त्रुटी: '+(x.error||'अज्ञात')));
+  }catch(e){ E('इंटरनेट/URL तपासा'); explainNet(e); }
+  $('cb1').disabled=false;
 });
 function logout(forced){ localStorage.removeItem('me'); ME=null; EDIT=null; resetScope(); GP=(ls('init')||{gp:[]}).gp||[]; showLogin(forced?'लॉगिन अवैध झाले – पुन्हा लॉगिन करा':''); }
 $('lo').onclick=()=>logout(false);
 function setWho(){ $('wn').textContent=ME.name+(ME.role==='admin'?' (Admin)':''); $('n2').style.display=ME.role==='admin'?'':'none'; $('lbw').style.display=ME.role==='admin'?'':'none';
   $('p3t').textContent=ME.role==='admin'?'सर्व नोंदी / दुरुस्ती':'माझ्या नोंदी / दुरुस्ती'; }
-function startApp(){ document.body.classList.remove('guest'); setWho(); placeSud(); tab(1); pingOnline(); loadInit().then(flush); qInfo(); instUI(); }
+function startApp(){ document.body.classList.remove('guest'); setWho(); placeSud(); tab(1); pingOnline(); loadInit().then(flush); qInfo(); instUI();
+  if(ME && ME.role!=='admin' && !ME.gp) show('✖ तुमचे खाते कोणत्याही ग्रामपंचायतीला जोडलेले नाही – Admin ला सांगा (त्याशिवाय नोंदी करता येणार नाहीत)','no'); }
 $('lf').addEventListener('submit',async ev=>{
   ev.preventDefault(); const u=$('lu').value.trim(), p=$('lp').value.trim();
   if(!u||!p){ $('lerr').textContent='नाव व PIN भरा'; return; }
@@ -774,25 +825,25 @@ const REPN={summary:'कर्मचारीवार_सारांश',area:
 const shName = (n,used) => { let b=String(n).replace(/[\\/?*\[\]:]/g,'_').slice(0,28)||'Sheet', x=b, i=2; while(used.has(x)) x=b.slice(0,26)+'_'+(i++); used.add(x); return x; };
 async function report(kind,btn){
   const from=$('rfrom').value, to=$('rto').value;
-  if(from && to && from>to){ $('rm').textContent='"पासून" दिनांक "पर्यंत" पेक्षा मोठा आहे'; return; }
-  $('rm').textContent='अहवाल बनवत आहे…'; btn.disabled=true;
+  if(from && to && from>to){ $('repmsg').textContent='"पासून" दिनांक "पर्यंत" पेक्षा मोठा आहे'; return; }
+  $('repmsg').textContent='अहवाल बनवत आहे…'; btn.disabled=true;
   try{
     const r=await post({action:'report',from,to});
-    if(!r.ok){ $('rm').textContent='फक्त Admin ला हा अहवाल मिळतो'; return; }
+    if(!r.ok){ $('repmsg').textContent='फक्त Admin ला हा अहवाल मिळतो'; return; }
     const wb=XLSX.utils.book_new();
     if(kind==='per'||kind==='pergp'){
       const src=r[kind]||{}, names=Object.keys(src);
-      if(!names.length){ $('rm').textContent='अजून नोंदी नाहीत'; return; }
+      if(!names.length){ $('repmsg').textContent='अजून नोंदी नाहीत'; return; }
       const used=new Set(); names.forEach(n=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(src[n]),shName(n,used)));
     } else {
       const rows=r[kind];
-      if(rows.length<2){ $('rm').textContent='या कालावधीत काम सापडले नाही'; return; }
+      if(rows.length<2){ $('repmsg').textContent='या कालावधीत काम सापडले नाही'; return; }
       const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=rows[0].map((_,i)=>({wch:Math.min(34,Math.max(10,...rows.slice(0,200).map(x=>String(x[i]==null?'':x[i]).length)))}));
       XLSX.utils.book_append_sheet(wb,ws,REPN[kind].slice(0,31));
     }
     const nm='ABPS_'+REPN[kind]+((from||to)?'_'+(from||'')+'_'+(to||''):'')+'.xlsx';
-    XLSX.writeFile(wb,nm); $('rm').textContent='✔ डाउनलोड झाली: '+nm;
-  }catch(e){ if(e.message!=='auth') $('rm').textContent='अहवाल अयशस्वी – इंटरनेट/URL तपासा'; }
+    XLSX.writeFile(wb,nm); $('repmsg').textContent='✔ डाउनलोड झाली: '+nm;
+  }catch(e){ if(e.message!=='auth') $('repmsg').textContent='अहवाल अयशस्वी – इंटरनेट/URL तपासा'; }
   finally{ btn.disabled=false; }
 }
 document.querySelectorAll('[data-rep]').forEach(b=>b.addEventListener('click',()=>report(b.dataset.rep,b)));
