@@ -238,7 +238,7 @@ input.locked{background:#e9ecef!important;color:#333;border-style:dashed}
 </div>
 <div class="hint">MH व डॅश आपोआप येतील. / नंतर १० पर्यंत अंक/अक्षरे चालतील (उदा. 1234567890 किंवा 125-A).</div>
 <div class="err" id="e_jc"></div>
-<div class="lkbox" id="lk" style="display:none">🔒 गाव, जॉबकार्ड, Family ID, अर्जदार क्रमांक व नाव मजूर यादीतून आले आहे – ते बदलता येत नाही.
+<div class="lkbox" id="lk" style="display:none"><span id="lkt">🔒 गाव, जॉबकार्ड, Family ID, अर्जदार क्रमांक व नाव मजूर यादीतून आले आहे – ते बदलता येत नाही.</span>
  <button type="button" class="btn sm" id="lkb">दुसरा मजूर निवडा</button>
  <button type="button" class="btn sm" id="lka" style="display:none">🔓 Admin: बदल करा</button></div>
 <div class="g" style="margin-top:6px">
@@ -765,6 +765,7 @@ function editEntry(e){
   const same=e.accountName===e.aadhaarName; $('same').checked=same; $('acn').readOnly=same; $('acn').value=e.accountName||e.aadhaarName;
   $('ebt').textContent='✏️ दुरुस्ती मोड: '+e.name+' (Family ID '+e.family+', अर्जदार '+e.applicant+')';
   $('eb').classList.add('show'); $('keepw').style.display='none'; busy(false);
+  PICK=null; lockPick(true,['jc','fm','ap','nm']);   // दुरुस्तीत जॉबकार्ड/Family ID/अर्जदार क्रमांक/मजुराचे नाव लॉक (रिकामे असेल तर भरता येते); बाकी सर्व जसे आहे तसे
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function cancelEdit(quiet){ EDIT=null; $('eb').classList.remove('show'); $('keepw').style.display=''; resetForm(); busy(false); if(!quiet) show('दुरुस्ती रद्द केली','ok'); }
@@ -1130,11 +1131,13 @@ function showFamily(w){
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 const LOCK_IDS=['vl','jc','fm','ap','nm'];
-function lockPick(on){
-  LOCK_IDS.forEach(id=>{ const e=$(id), v=e.value.trim(), has=id==='jc'?!/^MH-?$/i.test(v):v!=='';
+function lockPick(on,ids){
+  (on&&ids?ids:LOCK_IDS).forEach(id=>{ const e=$(id), v=e.value.trim(), has=id==='jc'?!/^MH-?$/i.test(v):v!=='';
     const l=!!on && has && !(id==='nm' && PICK && PICK.autoName);          // रिकामे/अंदाजे नाव वगळता सर्व लॉक
     e.readOnly=l; e.classList.toggle('locked',l); });
   $('lk').style.display=on?'block':'none';
+  const ed=!!(on&&EDIT); $('lkb').style.display=ed?'none':'';
+  $('lkt').textContent=ed?'🔒 दुरुस्ती मोड: जॉबकार्ड क्रमांक, Family ID, अर्जदार क्रमांक व मजुराचे नाव बदलता येत नाही.':'🔒 गाव, जॉबकार्ड, Family ID, अर्जदार क्रमांक व नाव मजूर यादीतून आले आहे – ते बदलता येत नाही.';
   $('lka').style.display=(on&&ME&&ME.role==='admin')?'inline-block':'none';
 }
 $('lkb').addEventListener('click',()=>{            // दुसरा मजूर निवडा: तेच जॉबकार्ड ठेवून त्याच जॉबकार्डमधील मजुरांची यादी
